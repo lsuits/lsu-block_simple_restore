@@ -73,7 +73,7 @@ if(empty($shortname) and $is_admin) {
     die;
 }
 
-$crit = !$is_admin ? simple_restore_utils::backadel_criterion() : $shortname;
+$crit = !$is_admin ? simple_restore_utils::backadel_criterion($course) : $shortname;
 
 $backdel = simple_restore_utils::backadel_backups($crit);
 $storage = !empty($backdel);
@@ -82,7 +82,6 @@ if ($storage) {
     echo $OUTPUT->heading(simple_restore_utils::_s('semester_backups'));
     simple_restore_utils::build_table($backdel, $course, $restore_to);
 }
-
 
 if (!$is_admin) {
     $courses = enrol_get_my_courses();

@@ -61,10 +61,24 @@ abstract class simple_restore_utils {
                 simple_restore_utils::_s('restore_course');
     }
 
-    public static function backadel_criterion() {
-        global $CFG;
+    public static function backadel_criterion($course) {
+        global $CFG, $USER;
 
-        return $CFG->block_backadel_suffix;
+        if (empty($CFG->block_backadel_suffix)) {
+            return "";
+        }
+
+        $crit = $CFG->block_backadel_suffix;
+
+        $trans = self::translate_criterion($crit);
+
+        return $crit == 'username' ? $trans($USER) : $trans($course);
+    }
+
+    public static function translate_criterion($crit) {
+        return function ($obj) use ($crit) {
+            return $obj->{$crit};
+        };
     }
 
     public static function backadel_backups($search) {
@@ -76,7 +90,9 @@ abstract class simple_restore_utils {
             "filename LIKE '%$search%'"
         ));
         $sql = "SELECT * FROM {files} WHERE $where";
+
         $backadel_backs = $DB->get_records_sql($sql);
+
         return $backadel_backs;
     }
 
@@ -116,7 +132,7 @@ abstract class simple_restore_utils {
             '',
             false,
             self::permission(
-                'canrestore', 
+                'canrestore',
                 get_context_instance(CONTEXT_COURSE, $courseid)
             ),
             false,
@@ -133,9 +149,9 @@ abstract class simple_restore_utils {
 
 class simple_restore {
     function __construct($course, $filename, $restore_to = 0) {
-        if(empty($course)) 
+        if(empty($course))
             throw new Exception(simple_restore_utils::_s('no_context'));
-        if(empty($filename)) 
+        if(empty($filename))
             throw new Exception(simple_restore_utils::_s('no_file'));
 
         $this->course = $course;

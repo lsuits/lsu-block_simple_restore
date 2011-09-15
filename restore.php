@@ -14,6 +14,7 @@ list($context, $course, $cm) = get_context_info_array($contextid);
 require_login($course, null, $cm);
 require_capability('block/simple_restore:canrestore', $context);
 
+$blockname = get_string('pluginname', 'block_simple_restore');
 $restore_heading = simple_restore_utils::heading($restore_to);
 
 $PAGE->set_url(new moodle_url('/blocks/simple_restore/restore.php',array(
@@ -21,6 +22,9 @@ $PAGE->set_url(new moodle_url('/blocks/simple_restore/restore.php',array(
 ));
 $PAGE->set_context($context);
 $PAGE->navbar->add($restore_heading);
+
+$PAGE->set_title($blockname . ': ' . $restore_heading);
+$PAGE->set_heading($blockname . ': ' . $restore_heading);
 
 $PAGE->requires->js('/lib/jquery.js');
 $PAGE->requires->js('/blocks/simple_restore/js/restore.js');
