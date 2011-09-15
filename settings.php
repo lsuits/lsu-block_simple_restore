@@ -71,7 +71,7 @@ if ($ADMIN->fulltree) {
         $type = array_pop($data);
         $module = implode('_', $data);
         if ($module == 'section') {
-            $module_name = $_s('seciton');
+            $module_name = $_s('section');
         } else {
             $module_name = get_string('pluginname', 'mod_'.$module);
         }
