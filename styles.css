@@ -1,0 +1,16 @@
+.path-blocks-simple_restore .region-content {
+   text-align: center;
+}
+
+.path-blocks-simple_restore .box.generalbox, .path-blocks-simple_restore .region-content table {
+   margin: 0 auto 30px auto;
+   box-shadow: 0 0 10px #bbbbbb;
+   width: 70%;
+   min-width: 500px;
+   text-align: left;
+}
+
+.path-blocks-simple_restore .region-content table td a {
+   overflow: hidden;
+   white-space:nowrap;
+}
