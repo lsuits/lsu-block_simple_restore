@@ -21,8 +21,8 @@ $PAGE->set_url(new moodle_url('/blocks/simple_restore/restore.php',array(
     'contextid' => $contextid)
 ));
 $PAGE->set_context($context);
+$PAGE->set_course($course);
 $PAGE->navbar->add($restore_heading);
-
 $PAGE->set_title($blockname . ': ' . $restore_heading);
 $PAGE->set_heading($blockname . ': ' . $restore_heading);
 
