@@ -77,7 +77,8 @@ abstract class simple_restore_utils {
 
     public static function translate_criterion($crit) {
         return function ($obj) use ($crit) {
-            return $obj->{$crit};
+            $appender = $crit == 'username' ? '_' : '';
+            return $appender . $obj->{$crit};
         };
     }
 
@@ -89,6 +90,7 @@ abstract class simple_restore_utils {
             'filearea = "backups"',
             "filename LIKE '%$search%'"
         ));
+
         $sql = "SELECT * FROM {files} WHERE $where";
 
         $backadel_backs = $DB->get_records_sql($sql);
