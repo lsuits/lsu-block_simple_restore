@@ -70,15 +70,7 @@ abstract class simple_restore_utils {
 
         $crit = $CFG->block_backadel_suffix;
 
-        $trans = self::translate_criterion($crit);
-
-        return $crit == 'username' ? $trans($USER) : $trans($course);
-    }
-
-    public static function translate_criterion($crit) {
-        return function ($obj) use ($crit) {
-            return $obj->{$crit};
-        };
+        return $crit == 'username' ? '_' . $USER->username : $course->{$crit};
     }
 
     public static function backadel_backups($search) {
@@ -89,6 +81,7 @@ abstract class simple_restore_utils {
             'filearea = "backups"',
             "filename LIKE '%$search%'"
         ));
+
         $sql = "SELECT * FROM {files} WHERE $where";
 
         $backadel_backs = $DB->get_records_sql($sql);
