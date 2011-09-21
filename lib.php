@@ -70,11 +70,7 @@ abstract class simple_restore_utils {
 
         $crit = $CFG->block_backadel_suffix;
 
-        if ($crit == 'username') {
-            return '_' . $USER->username;
-        } else {
-            return $course->{$crit};
-        }
+        return $crit == 'username' ? '_' . $USER->username : $course->{$crit};
     }
 
     public static function backadel_backups($search) {
