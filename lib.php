@@ -70,16 +70,10 @@ abstract class simple_restore_utils {
 
         $crit = $CFG->block_backadel_suffix;
 
-        $trans = self::translate_criterion($crit);
-
-        return $crit == 'username' ? $trans($USER) : $trans($course);
-    }
-
-    public static function translate_criterion($crit) {
-        return function ($obj) use ($crit) {
-            $appender = $crit == 'username' ? '_' : '';
-            return $appender . $obj->{$crit};
-        };
+        switch ($crit) {
+            case 'username': return '_' . $USER->username;
+            default: return $course->{$crit};
+        }
     }
 
     public static function backadel_backups($search) {
