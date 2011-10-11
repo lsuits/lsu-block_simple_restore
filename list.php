@@ -73,9 +73,11 @@ if(empty($shortname) and $is_admin) {
     die;
 }
 
-$crit = $is_admin ?
-    simple_restore_utils::backadel_shortname($shortname):
-    simple_restore_utils::backadel_criterion($course);
+if ($is_admin) {
+    $crit = simple_restore_utils::backadel_shortname($shortname):
+} else {
+    $crit = simple_restore_utils::backadel_criterion($course);
+}
 
 $backdel = simple_restore_utils::backadel_backups($crit);
 $storage = !empty($backdel);
