@@ -6,7 +6,7 @@ require_once 'lib.php';
 $courseid = required_param('id', PARAM_INT);
 $restore_to = optional_param('restore_to', 0, PARAM_INT);
 $action = optional_param('action', null, PARAM_ACTION);
-$file = optional_param('fileid', null, PARAM_INT);
+$file = optional_param('fileid', null, PARAM_RAW);
 
 // Needed for admins, as they need to query the courses
 $shortname = optional_param('shortname', null, PARAM_ACTION);
@@ -66,14 +66,18 @@ if(empty($shortname) and $is_admin) {
     }
 
     echo $OUTPUT->box_start();
-    quick_render('list.tpl', array('options' => $options));
+    quick_template::render('list.tpl', array('options' => $options));
     echo $OUTPUT->box_end();
 
     echo $OUTPUT->footer();
     die;
 }
 
-$crit = !$is_admin ? simple_restore_utils::backadel_criterion($course) : $shortname;
+if ($is_admin) {
+    $crit = simple_restore_utils::backadel_shortname($shortname):
+} else {
+    $crit = simple_restore_utils::backadel_criterion($course);
+}
 
 $backdel = simple_restore_utils::backadel_backups($crit);
 $storage = !empty($backdel);

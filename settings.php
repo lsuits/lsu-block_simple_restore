@@ -38,8 +38,8 @@ if ($ADMIN->fulltree) {
     $course_settings = array_reduce($modules, $flatmap, array());
 
     // Appropriate keys
-    $_k = function ($key) { 
-        return "simple_restore_{$key}";
+    $_k = function ($key) {
+        return "simple_restore/{$key}";
     };
 
     $_s = function ($k, $a=null) {
@@ -54,7 +54,7 @@ if ($ADMIN->fulltree) {
     );
 
     foreach ($general_settings as $name => $default) {
-        $str = $_s($name); 
+        $str = $_s($name);
         $settings->add(
             new admin_setting_configcheckbox($_k($name), $str, $str, $default)
         );

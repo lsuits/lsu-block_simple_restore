@@ -61,80 +61,117 @@ abstract class simple_restore_utils {
                 simple_restore_utils::_s('restore_course');
     }
 
-    public static function backadel_criterion($course) {
-        global $CFG, $USER;
+    public static function backadel_shortname($shortname) {
+        if (preg_match('/\s/', $shortname)) {
+            $matchers = array('/\s/', '/\//');
 
-        if (empty($CFG->block_backadel_suffix)) {
-            return "";
+            return preg_replace($matchers, '-', $shortname);
         }
 
-        $crit = $CFG->block_backadel_suffix;
+        return $shortname;
+    }
+
+    public static function backadel_criterion($course) {
+        global $USER;
+
+        $crit = get_config('block_backadel', 'suffix');
+
+        if (empty($crit)) {
+            return "";
+        }
 
         return $crit == 'username' ? '_' . $USER->username : $course->{$crit};
     }
 
     public static function backadel_backups($search) {
-        global $DB;
+        global $CFG;
 
-        $where = implode(' AND ', array(
-            'component = "backadel"',
-            'filearea = "backups"',
-            "filename LIKE '%$search%'"
-        ));
+        $backadel_path = get_config('block_backadel', 'path');
 
-        $sql = "SELECT * FROM {files} WHERE $where";
+        if (empty($backadel_path)) {
+            return array();
+        }
 
-        $backadel_backs = $DB->get_records_sql($sql);
+        $backadel_path = "$CFG->dataroot$backadel_path";
 
-        return $backadel_backs;
+        $by_search = function ($file) use ($search) {
+            return preg_match("/$search/", $file);
+        };
+
+        $to_backup = function ($file) use ($backadel_path) {
+            $backadel = new stdClass;
+            $backadel->id = $file;
+            $backadel->filename = $file;
+            $backadel->filesize = filesize($backadel_path . $file);
+            $backadel->timemodified = filemtime($backadel_path . $file);
+
+            return $backadel;
+        };
+
+        $potentials = array_filter(scandir($backadel_path), $by_search);
+
+        return array_map($to_backup, $potentials);
     }
 
     public static function prep_restore($fileid, $courseid) {
+        global $USER, $CFG;
+
         // Get the includes
         simple_restore_utils::includes();
 
         if(empty($fileid) || empty($courseid)) {
            throw new Exception(simple_restore_utils::_s('no_arguments'));
         }
-        // Wow ... really?
-        global $USER, $CFG, $DB;
 
-        $backup = $DB->get_record('files', array('id' => $fileid));
+        if (preg_match('/^backadel/', $fileid)) {
+            $backadel_path = get_config('block_backadel', 'path');
 
-        if(empty($backup)) 
-            throw new Exception(simple_restore_utils::_s('no_file'));
+            $copy_cmd = function ($path) use ($CFG, $backadel_path, $fileid) {
+                copy($CFG->dataroot . $backadel_path . $fileid, $path);
+            };
+        } else {
 
-        $fs = get_file_storage();
-        $browser = get_file_browser();
-        $filecontext= get_context_instance_by_id($backup->contextid);
+            $backup = $DB->get_record('files', array('id' => $fileid));
 
-        $storedfile = $fs->get_file(
-            $filecontext->id,
-            $backup->component,
-            $backup->filearea,
-            $backup->itemid,
-            $backup->filepath,
-            $backup->filename
-        );
+            if(empty($backup))
+                throw new Exception(simple_restore_utils::_s('no_file'));
 
-        $fileinfo = new file_info_stored(
-            $browser,
-            $filecontext,
-            $storedfile,
-            $CFG->wwwroot.'/pluginfile.php',
-            '',
-            false,
-            self::permission(
-                'canrestore',
-                get_context_instance(CONTEXT_COURSE, $courseid)
-            ),
-            false,
-            true
-        );
+            $fs = get_file_storage();
+            $browser = get_file_browser();
+            $filecontext= get_context_instance_by_id($backup->contextid);
+
+            $storedfile = $fs->get_file(
+                $filecontext->id,
+                $backup->component,
+                $backup->filearea,
+                $backup->itemid,
+                $backup->filepath,
+                $backup->filename
+            );
+
+            $fileinfo = new file_info_stored(
+                $browser,
+                $filecontext,
+                $storedfile,
+                $CFG->wwwroot.'/pluginfile.php',
+                '',
+                false,
+                self::permission(
+                    'canrestore',
+                    get_context_instance(CONTEXT_COURSE, $courseid)
+                ),
+                false,
+                true
+            );
+
+            $copy_cmd = function ($path) use ($fileinfo) {
+                $fileinfo->copy_to_pathname($path);
+            };
+        }
 
         $filename = restore_controller::get_tempdir_name($courseid, $USER->id);
-        $pathname = $CFG->dataroot . '/temp/backup/'. $filename;
-        $fileinfo->copy_to_pathname($pathname);
+        $pathname = $CFG->dataroot . '/temp/backup/' . $filename;
+        $copy_cmd($pathname);
 
         return $filename;
     }
@@ -192,11 +229,11 @@ class simple_restore {
                 if(preg_match('/(.+)_(\d+)_(.+)/', $setting_name, $matches)) {
                     $module = $matches[1];
                     $type = $matches[3];
-                    $admin_setting_key = 'simple_restore_'.$module.'_'.$type;
+                    $admin_setting_key = $module.'_'.$type;
                 } else {
-                    $admin_setting_key = 'simple_restore_'.$setting_name;
+                    $admin_setting_key = $setting_name;
                 }
-                $admin_setting = get_config(null, $admin_setting_key);
+                $admin_setting = get_config('simple_restore', $admin_setting_key);
                 if(!is_numeric($admin_setting)) {
                     continue;
                 }
