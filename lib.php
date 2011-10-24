@@ -95,7 +95,7 @@ abstract class simple_restore_utils {
         $backadel_path = "$CFG->dataroot$backadel_path";
 
         $by_search = function ($file) use ($search) {
-            return preg_match("/$search/", $file);
+            return preg_match("/$search[_.]/", $file);
         };
 
         $to_backup = function ($file) use ($backadel_path) {
