@@ -10,7 +10,6 @@ $file = optional_param('fileid', null, PARAM_RAW);
 
 // Needed for admins, as they need to query the courses
 $shortname = optional_param('shortname', null, PARAM_ACTION);
-$sn_filter = optional_param('sn_filter', null, PARAM_ACTION);
 
 if(!$course = $DB->get_record('course', array('id' => $courseid))) {
     print_error('no_course', 'block_simple_restore', '', $courseid);
@@ -52,13 +51,9 @@ $is_admin = has_capability('moodle/course:create', $system);
 
 if(empty($shortname) and $is_admin) {
     require_once $CFG->libdir . '/quick_template.php';
-    $options = array(
-        'contains' => simple_restore_utils::_s('contains'),
-        'equals' => simple_restore_utils::_s('equals'),
-        'startswith' => simple_restore_utils::_s('startswith'),
-        'endswith' => simple_restore_utils::_s('endswith')
-    );
     echo $OUTPUT->heading(simple_restore_utils::_s('adminfilter'));
+
+    $label = simple_restore_utils::search_label();
 
     // This executes because the admin didn't place anything in there
     if(isset($_POST['submit'])) {
@@ -66,7 +61,7 @@ if(empty($shortname) and $is_admin) {
     }
 
     echo $OUTPUT->box_start();
-    quick_template::render('list.tpl', array('options' => $options));
+    quick_template::render('list.tpl', array('label' => $label));
     echo $OUTPUT->box_end();
 
     echo $OUTPUT->footer();
@@ -75,8 +70,10 @@ if(empty($shortname) and $is_admin) {
 
 if ($is_admin) {
     $crit = simple_restore_utils::backadel_shortname($shortname);
+    $courses = simple_restore_utils::filter_courses($shortname);
 } else {
     $crit = simple_restore_utils::backadel_criterion($course);
+    $courses = enrol_get_my_courses();
 }
 
 $backdel = simple_restore_utils::backadel_backups($crit);
@@ -85,12 +82,6 @@ $storage = !empty($backdel);
 if ($storage) {
     echo $OUTPUT->heading(simple_restore_utils::_s('semester_backups'));
     simple_restore_utils::build_table($backdel, $course, $restore_to);
-}
-
-if (!$is_admin) {
-    $courses = enrol_get_my_courses();
-} else {
-    $courses = simple_restore_utils::filter_courses($shortname, $sn_filter);
 }
 
 // Map / reduces the course for backups into html tables, and returns whether
