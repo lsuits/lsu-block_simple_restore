@@ -11,6 +11,8 @@ $string['no_filter'] = 'Enter a valid course shortname.';
 $string['no_arguments'] = $string['pluginname'] . ' error: Invalid arguments were passed to prep restore.';
 $string['empty_backups'] = 'No course backups found.';
 
+$string['backup_name'] = 'Backup name / ';
+
 $string['contains'] = 'contains';
 $string['startswith'] = 'starts with';
 $string['endswith'] = 'ends with';

@@ -40,25 +40,27 @@ abstract class simple_restore_utils {
         echo html_writer::table($table);
     }
 
-    public static function filter_courses($shortname, $filter) {
+    public static function filter_courses($shortname) {
         global $DB;
 
-        $filter_by = function ($field) use ($shortname, $filter) {
-            switch ($filter) {
-                case "contains": return "{$field} LIKE '%{$shortname}%'";
-                case "equals": return "{$field} == '{$shortname}'";
-                case "startswith" : return "{$field} LIKE '{$shortname}%'";
-                case "endswith": return "{$field} LIKE '%{$shortname}'";
-            }
-        };
+        $safe_shortname = addslashes($shortname);
 
-        return $DB->get_records_select('course', $filter_by('shortname'));
+        $select = "shortname LIKE '%{$safe_shortname}%'";
+
+        return $DB->get_records_select('course', $select);
     }
 
     public static function heading($restore_to) {
         return $restore_to == 0 ?
                 simple_restore_utils::_s('delete_restore') :
                 simple_restore_utils::_s('restore_course');
+    }
+
+    public static function search_label() {
+        $path = get_config('block_backadel', 'path');
+
+        $entrance = empty($path) ? '' : self::_s('backup_name');
+        return $entrance . get_string('shortname') . ' ' . self::_s('contains');
     }
 
     public static function backadel_shortname($shortname) {
