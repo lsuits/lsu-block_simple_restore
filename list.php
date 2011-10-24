@@ -74,7 +74,7 @@ if(empty($shortname) and $is_admin) {
 }
 
 if ($is_admin) {
-    $crit = simple_restore_utils::backadel_shortname($shortname):
+    $crit = simple_restore_utils::backadel_shortname($shortname);
 } else {
     $crit = simple_restore_utils::backadel_criterion($course);
 }
