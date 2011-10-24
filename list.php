@@ -5,11 +5,11 @@ require_once 'lib.php';
 
 $courseid = required_param('id', PARAM_INT);
 $restore_to = optional_param('restore_to', 0, PARAM_INT);
-$action = optional_param('action', null, PARAM_ACTION);
+$action = optional_param('action', null, PARAM_TEXT);
 $file = optional_param('fileid', null, PARAM_RAW);
 
 // Needed for admins, as they need to query the courses
-$shortname = optional_param('shortname', null, PARAM_ACTION);
+$shortname = optional_param('shortname', null, PARAM_TEXT);
 
 if(!$course = $DB->get_record('course', array('id' => $courseid))) {
     print_error('no_course', 'block_simple_restore', '', $courseid);

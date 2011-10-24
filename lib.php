@@ -82,7 +82,8 @@ abstract class simple_restore_utils {
             return "";
         }
 
-        return $crit == 'username' ? '_' . $USER->username : $course->{$crit};
+        $search = $crit == 'username' ? '_' . $USER->username : $course->{$crit};
+        return "{$search}[_\.]";
     }
 
     public static function backadel_backups($search) {
@@ -97,7 +98,7 @@ abstract class simple_restore_utils {
         $backadel_path = "$CFG->dataroot$backadel_path";
 
         $by_search = function ($file) use ($search) {
-            return preg_match("/{$search}[_.]/", $file);
+            return preg_match("/{$search}/i", $file);
         };
 
         $to_backup = function ($file) use ($backadel_path) {
