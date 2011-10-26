@@ -9,6 +9,7 @@ $string['no_context'] = 'Empty context: A restore object must be given a context
 $string['no_file'] = 'Empty file: A restore object must be given a file.';
 $string['no_filter'] = 'Enter a valid course shortname.';
 $string['no_arguments'] = $string['pluginname'] . ' error: Invalid arguments were passed to prep restore.';
+$string['no_restore'] = 'The restore was unable to complete due to the following error: {$a}';
 $string['empty_backups'] = 'No course backups found.';
 
 $string['backup_name'] = 'Backup name / ';
