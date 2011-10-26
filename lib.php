@@ -241,7 +241,10 @@ class simple_restore {
                     continue;
                 }
                 // Set admin value
-                $setting->set_value($admin_setting);
+                // Some settings may be locked by permission
+                if ($setting->get_status() != base_setting::LOCKED_BY_PERMISSION) {
+                    $setting->set_value($admin_setting);
+                }
             }
         }
 
