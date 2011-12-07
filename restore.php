@@ -34,11 +34,17 @@ $header = $course->fullname;
 
 // This conditional returns html content for the ajax reponse
 if($confirm and data_submitted()) {
-    $restore->execute();
+    try {
+        $restore->execute();
 
-    echo $OUTPUT->notification(
-        get_string('restoreexecutionsuccess', 'backup'), 'notifysuccess'
-    );
+        echo $OUTPUT->notification(
+            get_string('restoreexecutionsuccess', 'backup'), 'notifysuccess'
+        );
+    } catch (Exception $e) {
+        $a = $e->getMessage();
+        echo $OUTPUT->notification(simple_restore_utils::_s('no_restore', $a));
+    }
+
     echo $OUTPUT->continue_button(
         new moodle_url('/course/view.php', array('id' => $course->id))
     );
