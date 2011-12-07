@@ -16,9 +16,9 @@ Visit [Simplified Restore's Github page][simple_restore_github] to either downlo
 1. See [the Moodle Docs page on block installation][block_doc].
 
 ##Requirements
+1. Download [Quick Template][quick_template].
 1. Smarty3 must be installed in your /lib/smarty3 folder.
 1. LSU's Quick Template (quicktemplate.php) must be installed in /lib/. 
-
 
 ## Contributions
 Contributions of any form are welcome. Github pull requests are preferred.
@@ -30,3 +30,4 @@ Simplified Restore adopts the same license that Moodle does.
 [simple_restore_github]: https://github.com/lsuits/simple_restore
 [block_doc]: http://docs.moodle.org/20/en/Installing_contributed_modules_or_plugins#Block_installation
 [issues]: https://github.com/lsuits/simple_restore/issues
+[quick_template]: https://github.com/lsuits/quick_template
