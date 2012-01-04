@@ -117,7 +117,7 @@ abstract class simple_restore_utils {
     }
 
     public static function prep_restore($fileid, $courseid) {
-        global $USER, $CFG;
+        global $USER, $CFG, $DB;
 
         // Get the includes
         simple_restore_utils::includes();
