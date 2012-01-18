@@ -327,9 +327,17 @@ class simple_restore {
             $this->process_schema($rc)
         );
 
+        // It's important to pass the previous course's config
+        $course_settings = array(
+            'id' => $this->course->id,
+            'fullname' => $this->course->fullname,
+            'shortname' => $this->course->shortname,
+            'idnumber' => $this->course->idnumber
+        );
+
         events_trigger('simple_restore_complete', array(
             'userid' => $this->userid,
-            'courseid' => $this->course->id
+            'course_settings' => $course_settings
         ));
 
         return true;
