@@ -30,7 +30,7 @@ abstract class simple_restore_utils {
                     'action' => 'choosefile',
                     'restore_to' => $restore_to,
                     'fileid' => $backup->id
-                )), $backup->filename); 
+                )), $backup->filename);
             $name = new html_table_cell($link);
             $size = new html_table_cell(display_size($backup->filesize));
             $modified = new html_table_cell(date('d M Y, h:i:s A', 
@@ -132,6 +132,9 @@ abstract class simple_restore_utils {
             $copy_cmd = function ($path) use ($CFG, $backadel_path, $fileid) {
                 copy($CFG->dataroot . $backadel_path . $fileid, $path);
             };
+
+            $is_backadel = true;
+            $backup_name = $fileid;
         } else {
 
             $backup = $DB->get_record('files', array('id' => $fileid));
@@ -170,23 +173,45 @@ abstract class simple_restore_utils {
             $copy_cmd = function ($path) use ($fileinfo) {
                 $fileinfo->copy_to_pathname($path);
             };
+
+            $is_backadel = false;
+            $backup_name = $backup->filename;
         }
 
         $filename = restore_controller::get_tempdir_name($courseid, $USER->id);
         $pathname = $CFG->dataroot . '/temp/backup/' . $filename;
         $copy_cmd($pathname);
 
+        $event_data = array(
+            'is_backadel' => $is_backadel,
+            'fileid' => $fileid,
+            'userid' => $USER->id,
+            'courseid' => $courseid,
+            'filename' => $backup_name,
+            'temppath' => $pathname
+        );
+
+        events_trigger('simple_restore_selected', $event_data);
+
         return $filename;
     }
 }
 
 class simple_restore {
+    var $userid;
+    var $course;
+    var $filename;
+    var $restore_to;
+
     function __construct($course, $filename, $restore_to = 0) {
         if(empty($course))
             throw new Exception(simple_restore_utils::_s('no_context'));
         if(empty($filename))
             throw new Exception(simple_restore_utils::_s('no_file'));
 
+        global $USER;
+
+        $this->userid = $USER->id;
         $this->course = $course;
         $this->context = get_context_instance(CONTEXT_COURSE, $course->id);
         $this->filename = $filename;
@@ -280,7 +305,6 @@ class simple_restore {
 
     public function execute() {
         simple_restore_utils::includes();
-        global $USER;
 
         // Confirmed ... process destination
         $confirmed = $this->process_destination(
@@ -293,7 +317,7 @@ class simple_restore {
             $confirmed->get_course_id(),
             backup::INTERACTIVE_YES,
             backup::MODE_GENERAL,
-            $USER->id,
+            $this->userid,
             $confirmed->get_target()
         );
 
@@ -302,6 +326,19 @@ class simple_restore {
         $this->process_final(
             $this->process_schema($rc)
         );
+
+        // It's important to pass the previous course's config
+        $course_settings = array(
+            'id' => $this->course->id,
+            'fullname' => $this->course->fullname,
+            'shortname' => $this->course->shortname,
+            'idnumber' => $this->course->idnumber
+        );
+
+        events_trigger('simple_restore_complete', array(
+            'userid' => $this->userid,
+            'course_settings' => $course_settings
+        ));
 
         return true;
     }
