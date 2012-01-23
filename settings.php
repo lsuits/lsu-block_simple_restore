@@ -19,6 +19,12 @@ if ($ADMIN->fulltree) {
         'grade_histories' => 0
     );
 
+    $high_level_settings = array(
+        'keep_roles_and_enrolments' => 0,
+        'keep_groups_and_groupings' => 0,
+        'overwrite_conf' => 1
+    );
+
     $modules = $DB->get_records_menu('modules', null, 'id, name') +
             array(0 => 'section');
 
@@ -46,6 +52,15 @@ if ($ADMIN->fulltree) {
         return get_string($k, 'block_simple_restore', $a);
     };
 
+    $iter_settings = function ($chosen_settings) use ($settings, $_k, $_s) {
+        foreach ($chosen_settings as $name => $default) {
+            $str = $_s($name);
+            $settings->add(
+                new admin_setting_configcheckbox($_k($name), $str, $str, $default)
+            );
+        }
+    };
+
     // Start building the Admin screen.
     $settings->add(
         new admin_setting_heading(
@@ -53,12 +68,16 @@ if ($ADMIN->fulltree) {
         )
     );
 
-    foreach ($general_settings as $name => $default) {
-        $str = $_s($name);
-        $settings->add(
-            new admin_setting_configcheckbox($_k($name), $str, $str, $default)
-        );
-    }
+    $iter_settings($general_settings);
+
+    $settings->add(
+        new admin_setting_heading(
+            $_k('course'), $_s('course'), $_s('course_desc')
+        )
+    );
+
+
+    $iter_settings($high_level_settings);
 
     $settings->add(
         new admin_setting_heading(
