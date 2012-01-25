@@ -86,10 +86,10 @@ if ($storage) {
 
 // Map / reduces the course for backups into html tables, and returns whether
 // or not each course had backups
-$successful = array_reduce($courses, function($in, $course) use ($restore_to) {
-    global $DB, $OUTPUT, $restore_to;
+$successful = array_reduce($courses, function($in, $c) use ($course, $restore_to) {
+    global $DB, $OUTPUT;
 
-    $ctx = get_context_instance(CONTEXT_COURSE, $course->id);
+    $ctx = get_context_instance(CONTEXT_COURSE, $c->id);
 
     $backups = $DB->get_records('files', array(
         'component' => 'backup',
@@ -101,7 +101,7 @@ $successful = array_reduce($courses, function($in, $course) use ($restore_to) {
     // No need to process course if no backups
     if(empty($backups)) return $in || false;
 
-    echo $OUTPUT->heading($course->fullname.' - '. $course->shortname);
+    echo $OUTPUT->heading($c->fullname.' - '. $c->shortname);
     simple_restore_utils::build_table($backups, $course, $restore_to);
 
     return true;

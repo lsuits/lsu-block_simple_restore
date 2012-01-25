@@ -33,7 +33,7 @@ abstract class simple_restore_utils {
                 )), $backup->filename);
             $name = new html_table_cell($link);
             $size = new html_table_cell(display_size($backup->filesize));
-            $modified = new html_table_cell(date('d M Y, h:i:s A', 
+            $modified = new html_table_cell(date('d M Y, h:i:s A',
                                             $backup->timemodified));
             return new html_table_row(array($name, $size, $modified));
         }, $backups);
