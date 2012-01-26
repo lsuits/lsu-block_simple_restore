@@ -9,8 +9,7 @@ This is the Simplified Restore block for Moodle 2.2.x.
 
 ##Requirements
 1. Download [Quick Template][quick_template].
-1. Smarty3 must be installed in your /lib/smarty3 folder.
-1. LSU's Quick Template (quicktemplate.php) must be installed in /lib/. 
+1. LSU's Quick Template `quick_template` must be installed in /lib/.
 
 ##Download
 Visit [Simplified Restore's Github page][simple_restore_github] to either download a package or clone the git repository.

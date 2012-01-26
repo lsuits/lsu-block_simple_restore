@@ -50,7 +50,7 @@ $system = get_context_instance(CONTEXT_SYSTEM);
 $is_admin = has_capability('moodle/course:create', $system);
 
 if(empty($shortname) and $is_admin) {
-    require_once $CFG->libdir . '/quick_template.php';
+    require_once $CFG->libdir . '/quick_template/lib.php';
     echo $OUTPUT->heading(simple_restore_utils::_s('adminfilter'));
 
     $label = simple_restore_utils::search_label();
