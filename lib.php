@@ -332,7 +332,10 @@ class simple_restore {
             'id' => $this->course->id,
             'fullname' => $this->course->fullname,
             'shortname' => $this->course->shortname,
-            'idnumber' => $this->course->idnumber
+            'idnumber' => $this->course->idnumber,
+            'format' => $this->course->format,
+            'visible' => $this->course->visible,
+            'summary' => $this->coiurse->summary
         );
 
         events_trigger('simple_restore_complete', array(
