@@ -335,7 +335,7 @@ class simple_restore {
             'idnumber' => $this->course->idnumber,
             'format' => $this->course->format,
             'visible' => $this->course->visible,
-            'summary' => $this->coiurse->summary
+            'summary' => $this->course->summary
         );
 
         events_trigger('simple_restore_complete', array(
