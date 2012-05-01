@@ -130,7 +130,8 @@ abstract class simple_restore_utils {
             $backadel_path = get_config('block_backadel', 'path');
 
             $copy_cmd = function ($path) use ($CFG, $backadel_path, $fileid) {
-                copy($CFG->dataroot . $backadel_path . $fileid, $path);
+                var_dump(copy($CFG->dataroot . $backadel_path . $fileid, $path));
+                print_r($CFG->dataroot . $backadel_path . $fileid) and die();
             };
 
             $is_backadel = true;
