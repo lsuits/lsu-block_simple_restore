@@ -126,11 +126,7 @@ abstract class simple_restore_utils {
            throw new Exception(simple_restore_utils::_s('no_arguments'));
         }
 
-        $backadel_search = self::backadel_criterion(
-            $DB->get_record('course', array('id' => $courseid))
-        );
-
-        if (preg_match('/^backadel/', $fileid) or preg_match("/$backadel_search/", $fileid)) {
+        if (!is_numeric($fileid)) {
             $backadel_path = get_config('block_backadel', 'path');
 
             $copy_cmd = function ($path) use ($CFG, $backadel_path, $fileid) {
