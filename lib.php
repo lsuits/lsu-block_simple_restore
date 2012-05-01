@@ -122,16 +122,19 @@ abstract class simple_restore_utils {
         // Get the includes
         simple_restore_utils::includes();
 
-        if(empty($fileid) || empty($courseid)) {
+        if (empty($fileid) || empty($courseid)) {
            throw new Exception(simple_restore_utils::_s('no_arguments'));
         }
 
-        if (preg_match('/^backadel/', $fileid)) {
+        $backadel_search = self::backadel_criterion(
+            $DB->get_record('course', array('id' => $courseid))
+        );
+
+        if (preg_match('/^backadel/', $fileid) or preg_match("/$backadel_search/", $fileid)) {
             $backadel_path = get_config('block_backadel', 'path');
 
             $copy_cmd = function ($path) use ($CFG, $backadel_path, $fileid) {
-                var_dump(copy($CFG->dataroot . $backadel_path . $fileid, $path));
-                print_r($CFG->dataroot . $backadel_path . $fileid) and die();
+                copy($CFG->dataroot . $backadel_path . $fileid, $path);
             };
 
             $is_backadel = true;
