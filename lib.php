@@ -179,7 +179,7 @@ abstract class simple_restore_utils {
         }
 
         $filename = restore_controller::get_tempdir_name($courseid, $USER->id);
-        $pathname = $CFG->dataroot . '/temp/backup/' . $filename;
+        $pathname = $CFG->tempdir . '/backup/' . $filename;
         $copy_cmd($pathname);
 
         $event_data = array(
