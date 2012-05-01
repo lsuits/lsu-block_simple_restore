@@ -1,3 +1,8 @@
+# v1.1.1
+
+- Minor bug in course variable name for course summary
+- Use correct temp directory $CFG setting
+
 # v1.1.0
 
 - Fixes minor bug in table building [8bf4eb6](https://github.com/lsuits/simple_restore/commit/8bf4eb6bcf7234c02d43074156ec2e399d2224ca)
