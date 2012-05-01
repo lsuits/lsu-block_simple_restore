@@ -2,6 +2,7 @@
 
 - Minor bug in course variable name for course summary
 - Use correct temp directory $CFG setting
+- Bug in backadel integration on older systems
 
 # v1.1.0
 
