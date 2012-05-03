@@ -243,6 +243,11 @@ class simple_restore {
 
     private function process_schema($rc) {
 
+        // File dependencies
+        $file_dependencies = array(
+            'block' => 1, 'comments' => 1, 'filters' => 1
+        );
+
         $_POST['stage'] = restore_ui::STAGE_SCHEMA;
         $restore = new restore_ui($rc, array('contextid' => $this->context->id));
 
@@ -252,9 +257,10 @@ class simple_restore {
         $tasks = $this->rip_ui($restore)->get_tasks();
         foreach ($tasks as $task) {
             $settings = $task->get_settings();
-            foreach($settings as $setting) {
+            foreach ($settings as $setting) {
                 $setting_name = $setting->get_name();
-                if(preg_match('/(.+)_(\d+)_(.+)/', $setting_name, $matches)) {
+
+                if (preg_match('/(.+)_(\d+)_(.+)/', $setting_name, $matches)) {
                     $module = $matches[1];
                     $type = $matches[3];
                     $admin_setting_key = $module.'_'.$type;
@@ -262,8 +268,15 @@ class simple_restore {
                     $admin_setting_key = $setting_name;
                 }
                 $admin_setting = get_config('simple_restore', $admin_setting_key);
-                if(!is_numeric($admin_setting)) {
+                if (!is_numeric($admin_setting)) {
                     continue;
+                }
+
+                if ($admin_setting and isset($file_dependencies[$setting_name])) {
+                    $basepath = $task->get_taskbasepath();
+                    if (!file_exists("$basepath/$setting_name.xml")) {
+                        continue;
+                    }
                 }
                 // Set admin value
                 // Some settings may be locked by permission
@@ -307,9 +320,7 @@ class simple_restore {
         simple_restore_utils::includes();
 
         // Confirmed ... process destination
-        $confirmed = $this->process_destination(
-            $this->process_confirm()
-        );
+        $confirmed = $this->process_destination($this->process_confirm());
 
         // Setting up controller ... tmp tables
         $rc = new restore_controller(
@@ -321,15 +332,24 @@ class simple_restore {
             $confirmed->get_target()
         );
 
+        if ($rc->get_status() == backup::STATUS_REQUIRE_CONV) {
+            $rc->convert();
+        }
+
         // Probably good to do this
         unset($confirmed);
-        $this->process_final(
-            $this->process_schema($rc)
-        );
+        $this->process_final($this->process_schema($rc));
+
+        // Restore blocks
+        if ($this->restore_to == 0) {
+            blocks_delete_all_for_context($this->context->id);
+            blocks_add_default_course_blocks($this->course);
+        }
 
         // It's important to pass the previous course's config
         $course_settings = array(
             'id' => $this->course->id,
+            'restore_to' => $this->restore_to,
             'fullname' => $this->course->fullname,
             'shortname' => $this->course->shortname,
             'idnumber' => $this->course->idnumber,
