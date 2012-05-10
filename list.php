@@ -99,9 +99,9 @@ $successful = array_reduce($courses, function($in, $c) use ($course, $restore_to
     ), 'timemodified DESC');
 
     // No need to process course if no backups
-    if(empty($backups)) return $in || false;
+    if (empty($backups)) return $in || false;
 
-    echo $OUTPUT->heading($c->fullname.' - '. $c->shortname);
+    echo $OUTPUT->heading($c->shortname);
     simple_restore_utils::build_table($backups, $course, $restore_to);
 
     return true;
