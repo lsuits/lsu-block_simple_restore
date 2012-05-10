@@ -1,3 +1,9 @@
+## v1.2.1
+
+- Pass in entire previous course to event [6ffb23][6ffb23]
+
+[6ffb23]: https://github.com/lsuits/simple_restore/commit/6ffb233a29eec9d7399a1ac5d1c7a4fea8a062a5
+
 ## v1.2.0
 
 - Restore default blocks on overwrite [#20][20]
