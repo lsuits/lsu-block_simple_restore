@@ -1,8 +1,10 @@
 ## v1.2.1
 
 - Pass in entire previous course to event [6ffb23][6ffb23]
+- Add icons [8568c0][8568c0]
 
 [6ffb23]: https://github.com/lsuits/simple_restore/commit/6ffb233a29eec9d7399a1ac5d1c7a4fea8a062a5
+[8568c0]: https://github.com/lsuits/simple_restore/commit/8568c0e31ea296ecc488e08b1b6d081d00230583
 
 ## v1.2.0
 
