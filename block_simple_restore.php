@@ -41,9 +41,11 @@ class block_simple_restore extends block_list {
             $gen_link(0, $delete_str)
         );
 
+        $params = array('class' => 'icon');
+
         $content->icons = array(
-            $OUTPUT->pix_icon('i/restore', $import_str),
-            $OUTPUT->pix_icon('i/backup', $delete_str)
+            $OUTPUT->pix_icon('i/restore', $import_str, 'moodle', $params),
+            $OUTPUT->pix_icon('i/backup', $delete_str, 'moodle', $params)
         );
 
         $content->footer = '';
