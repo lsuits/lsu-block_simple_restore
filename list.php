@@ -33,15 +33,16 @@ if($file and $action) {
 $blockname = get_string('pluginname', 'block_simple_restore');
 $heading = simple_restore_utils::heading($restore_to);
 
+$base_url = new moodle_url('/blocks/simple_restore/list.php', array(
+    'id' => $courseid, 'restore_to' => $restore_to
+));
+
 $PAGE->set_context($context);
 $PAGE->set_course($course);
 $PAGE->navbar->add($blockname);
 $PAGE->set_title($blockname.': '.$heading);
 $PAGE->set_heading($blockname.': '.$heading);
-$PAGE->set_url('/blocks/simple_restore/list.php',array(
-    'id' => $courseid,
-    'restore_to' => $restore_to
-));
+$PAGE->set_url($base_url);
 
 echo $OUTPUT->header();
 
@@ -107,7 +108,35 @@ $successful = array_reduce($courses, function($in, $c) use ($course, $restore_to
     return true;
 }, false);
 
-if(!$successful and !$storage) {
+$str = get_string('choosefilefromuserbackup', 'backup');
+echo $OUTPUT->heading($str);
+
+$user_context = get_context_instance(CONTEXT_USER, $USER->id);
+$params = array(
+    'component' => 'user',
+    'filearea' => 'backup',
+    'contextid' => $user_context->id,
+);
+$correct_files = function($file) { return $file->filename != '.'; };
+$user_backups = array_filter($DB->get_records('files', $params), $correct_files);
+
+$params = array(
+    'contextid' => $user_context->id,
+    'currentcontext' => $context->id,
+    'filearea' => 'backup',
+    'component' => 'user',
+    'returnurl' => $base_url->out(false)
+);
+
+$str = get_string('managefiles', 'backup');
+$url = new moodle_url('/backup/backupfilesedit.php', $params);
+
+echo $OUTPUT->single_button($url, $str, 'post', array('class' => 'center padded'));
+if ($user_backups) {
+    simple_restore_utils::build_table($user_backups, $course, $restore_to);
+}
+
+if (!$successful and !$storage and !$user_backups) {
     echo $OUTPUT->notification(simple_restore_utils::_s('empty_backups'));
     echo $OUTPUT->continue_button(
         new moodle_url('/course/view.php', array('id' => $courseid))
