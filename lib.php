@@ -15,7 +15,7 @@ abstract class simple_restore_utils {
         return get_string($name, 'block_simple_restore', $a);
     }
 
-    public static function build_table($backups, $course, $restore_to) {
+    public static function build_table($backups, $courseid, $restore_to) {
         $table = new html_table();
         $table->head = array(
             get_string('name'),
@@ -23,10 +23,10 @@ abstract class simple_restore_utils {
             get_string('modified')
         );
 
-        $table->data = array_map(function($backup) use ($course, $restore_to) {
+        $table->data = array_map(function($backup) use ($courseid, $restore_to) {
             $link = html_writer::link(
                 new moodle_url('/blocks/simple_restore/list.php', array(
-                    'id' => $course->id,
+                    'id' => $courseid,
                     'action' => 'choosefile',
                     'restore_to' => $restore_to,
                     'fileid' => $backup->id
@@ -38,7 +38,7 @@ abstract class simple_restore_utils {
             return new html_table_row(array($name, $size, $modified));
         }, $backups);
 
-        echo html_writer::table($table);
+        return html_writer::table($table);
     }
 
     public static function filter_courses($shortname) {

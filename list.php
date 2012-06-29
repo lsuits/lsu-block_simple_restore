@@ -78,74 +78,32 @@ if (empty($shortname) and $is_admin) {
 
 echo $OUTPUT->header();
 
+$data = new stdClass;
+$data->restore_to = $restore_to;
+$data->courseid = $courseid;
+// Admins can filter by shortname
 if ($is_admin) {
-    $crit = simple_restore_utils::backadel_shortname($shortname);
-    $courses = simple_restore_utils::filter_courses($shortname);
-} else {
-    $crit = simple_restore_utils::backadel_criterion($course);
-    $courses = enrol_get_my_courses();
+    $data->shortname = $shortname;
 }
+$data->lists = array();
 
-$backdel = simple_restore_utils::backadel_backups($crit);
-$storage = !empty($backdel);
+events_trigger('simple_restore_backup_list', $data);
 
-if ($storage) {
-    echo $OUTPUT->heading(simple_restore_utils::_s('semester_backups'));
-    simple_restore_utils::build_table($backdel, $course, $restore_to);
-}
+$display_list = function($in, $list) {
+    echo $list->html;
 
-// Map / reduces the course for backups into html tables, and returns whether
-// or not each course had backups
-$successful = array_reduce($courses, function($in, $c) use ($course, $restore_to) {
-    global $DB, $OUTPUT;
+    return $in || !empty($list->backups);
+};
 
-    $ctx = get_context_instance(CONTEXT_COURSE, $c->id);
+// Obey handled order
+usort($data->lists, function($a, $b) {
+    if ($a->order == $b->order) return 0;
+    return $a->order < $b->order ? -1 : 1;
+});
 
-    $backups = $DB->get_records('files', array(
-        'component' => 'backup',
-        'contextid' => $ctx->id,
-        'filearea' => 'course',
-        'mimetype' => 'application/vnd.moodle.backup'
-    ), 'timemodified DESC');
+$successful = array_reduce($data->lists, $display_list, false);
 
-    // No need to process course if no backups
-    if (empty($backups)) return $in || false;
-
-    echo $OUTPUT->heading($c->shortname);
-    simple_restore_utils::build_table($backups, $course, $restore_to);
-
-    return true;
-}, false);
-
-$str = get_string('choosefilefromuserbackup', 'backup');
-echo $OUTPUT->heading($str);
-
-$user_context = get_context_instance(CONTEXT_USER, $USER->id);
-$params = array(
-    'component' => 'user',
-    'filearea' => 'backup',
-    'contextid' => $user_context->id,
-);
-$correct_files = function($file) { return $file->filename != '.'; };
-$user_backups = array_filter($DB->get_records('files', $params), $correct_files);
-
-$params = array(
-    'contextid' => $user_context->id,
-    'currentcontext' => $context->id,
-    'filearea' => 'backup',
-    'component' => 'user',
-    'returnurl' => $base_url->out(false)
-);
-
-$str = get_string('managefiles', 'backup');
-$url = new moodle_url('/backup/backupfilesedit.php', $params);
-
-echo $OUTPUT->single_button($url, $str, 'post', array('class' => 'center padded'));
-if ($user_backups) {
-    simple_restore_utils::build_table($user_backups, $course, $restore_to);
-}
-
-if (!$successful and !$storage and !$user_backups) {
+if (!$successful) {
     echo $OUTPUT->notification(simple_restore_utils::_s('empty_backups'));
     echo $OUTPUT->continue_button(
         new moodle_url('/course/view.php', array('id' => $courseid))
