@@ -44,30 +44,39 @@ $PAGE->set_title($blockname.': '.$heading);
 $PAGE->set_heading($blockname.': '.$heading);
 $PAGE->set_url($base_url);
 
-echo $OUTPUT->header();
-
 $system = get_context_instance(CONTEXT_SYSTEM);
 
 $is_admin = has_capability('moodle/course:create', $system);
 
-if(empty($shortname) and $is_admin) {
-    require_once $CFG->libdir . '/quick_template/lib.php';
+if (empty($shortname) and $is_admin) {
+    require_once 'list_form.php';
+
+    $form = new list_form();
+
+    if ($form->is_cancelled()) {
+        redirect(new moodle_url('/course/view.php', array('id' => $courseid)));
+    } else if ($data = $form->get_data()) {
+        $warn = $OUTPUT->notification(simple_restore_utils::_s('no_filter'));
+    }
+
+    $form->set_data(array('id' => $courseid));
+
+    echo $OUTPUT->header();
     echo $OUTPUT->heading(simple_restore_utils::_s('adminfilter'));
 
-    $label = simple_restore_utils::search_label();
-
-    // This executes because the admin didn't place anything in there
-    if(isset($_POST['submit'])) {
-        echo $OUTPUT->notification(simple_restore_utils::_s('no_filter'));
+    if (!empty($warn)) {
+        echo $warn;
     }
 
     echo $OUTPUT->box_start();
-    quick_template::render('list.tpl', array('label' => $label));
+    $form->display();
     echo $OUTPUT->box_end();
 
     echo $OUTPUT->footer();
     die;
 }
+
+echo $OUTPUT->header();
 
 if ($is_admin) {
     $crit = simple_restore_utils::backadel_shortname($shortname);

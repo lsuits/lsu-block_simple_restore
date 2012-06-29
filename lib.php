@@ -37,6 +37,7 @@ abstract class simple_restore_utils {
                                             $backup->timemodified));
             return new html_table_row(array($name, $size, $modified));
         }, $backups);
+
         echo html_writer::table($table);
     }
 
