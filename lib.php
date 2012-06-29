@@ -15,7 +15,7 @@ abstract class simple_restore_utils {
         return get_string($name, 'block_simple_restore', $a);
     }
 
-    public static function build_table($backups, $courseid, $restore_to) {
+    public static function build_table($backups, $name, $courseid, $restore_to) {
         $table = new html_table();
         $table->head = array(
             get_string('name'),
@@ -23,10 +23,11 @@ abstract class simple_restore_utils {
             get_string('modified')
         );
 
-        $table->data = array_map(function($backup) use ($courseid, $restore_to) {
+        $to_row = function($backup) use ($name, $courseid, $restore_to) {
             $link = html_writer::link(
                 new moodle_url('/blocks/simple_restore/list.php', array(
                     'id' => $courseid,
+                    'name' => $name,
                     'action' => 'choosefile',
                     'restore_to' => $restore_to,
                     'fileid' => $backup->id
@@ -36,7 +37,9 @@ abstract class simple_restore_utils {
             $modified = new html_table_cell(date('d M Y, h:i:s A',
                                             $backup->timemodified));
             return new html_table_row(array($name, $size, $modified));
-        }, $backups);
+        };
+
+        $table->data = array_map($to_row, $backups);
 
         return html_writer::table($table);
     }
@@ -57,68 +60,8 @@ abstract class simple_restore_utils {
                 simple_restore_utils::_s('restore_course');
     }
 
-    public static function search_label() {
-        $path = get_config('block_backadel', 'path');
-
-        $entrance = empty($path) ? '' : self::_s('backup_name');
-        return $entrance . get_string('shortname') . ' ' . self::_s('contains');
-    }
-
-    public static function backadel_shortname($shortname) {
-        if (preg_match('/\s/', $shortname)) {
-            $matchers = array('/\s/', '/\//');
-
-            return preg_replace($matchers, '-', $shortname);
-        }
-
-        return $shortname;
-    }
-
-    public static function backadel_criterion($course) {
-        global $USER;
-
-        $crit = get_config('block_backadel', 'suffix');
-
-        if (empty($crit)) {
-            return "";
-        }
-
-        $search = $crit == 'username' ? '_' . $USER->username : $course->{$crit};
-        return "{$search}[_\.]";
-    }
-
-    public static function backadel_backups($search) {
-        global $CFG;
-
-        $backadel_path = get_config('block_backadel', 'path');
-
-        if (empty($backadel_path)) {
-            return array();
-        }
-
-        $backadel_path = "$CFG->dataroot$backadel_path";
-
-        $by_search = function ($file) use ($search) {
-            return preg_match("/{$search}/i", $file);
-        };
-
-        $to_backup = function ($file) use ($backadel_path) {
-            $backadel = new stdClass;
-            $backadel->id = $file;
-            $backadel->filename = $file;
-            $backadel->filesize = filesize($backadel_path . $file);
-            $backadel->timemodified = filemtime($backadel_path . $file);
-
-            return $backadel;
-        };
-
-        $potentials = array_filter(scandir($backadel_path), $by_search);
-
-        return array_map($to_backup, $potentials);
-    }
-
-    public static function prep_restore($fileid, $courseid) {
-        global $USER, $CFG, $DB;
+    public static function prep_restore($fileid, $name, $courseid) {
+        global $USER, $CFG;
 
         // Get the includes
         simple_restore_utils::includes();
@@ -127,72 +70,21 @@ abstract class simple_restore_utils {
            throw new Exception(simple_restore_utils::_s('no_arguments'));
         }
 
-        if (!is_numeric($fileid)) {
-            $backadel_path = get_config('block_backadel', 'path');
-
-            $copy_cmd = function ($path) use ($CFG, $backadel_path, $fileid) {
-                copy($CFG->dataroot . $backadel_path . $fileid, $path);
-            };
-
-            $is_backadel = true;
-            $backup_name = $fileid;
-        } else {
-
-            $backup = $DB->get_record('files', array('id' => $fileid));
-
-            if(empty($backup))
-                throw new Exception(simple_restore_utils::_s('no_file'));
-
-            $fs = get_file_storage();
-            $browser = get_file_browser();
-            $filecontext= get_context_instance_by_id($backup->contextid);
-
-            $storedfile = $fs->get_file(
-                $filecontext->id,
-                $backup->component,
-                $backup->filearea,
-                $backup->itemid,
-                $backup->filepath,
-                $backup->filename
-            );
-
-            $fileinfo = new file_info_stored(
-                $browser,
-                $filecontext,
-                $storedfile,
-                $CFG->wwwroot.'/pluginfile.php',
-                '',
-                false,
-                self::permission(
-                    'canrestore',
-                    get_context_instance(CONTEXT_COURSE, $courseid)
-                ),
-                false,
-                true
-            );
-
-            $copy_cmd = function ($path) use ($fileinfo) {
-                $fileinfo->copy_to_pathname($path);
-            };
-
-            $is_backadel = false;
-            $backup_name = $backup->filename;
-        }
-
         $filename = restore_controller::get_tempdir_name($courseid, $USER->id);
         $pathname = $CFG->tempdir . '/backup/' . $filename;
-        $copy_cmd($pathname);
 
-        $event_data = array(
-            'is_backadel' => $is_backadel,
-            'fileid' => $fileid,
-            'userid' => $USER->id,
-            'courseid' => $courseid,
-            'filename' => $backup_name,
-            'temppath' => $pathname
-        );
+        $data = new stdClass;
+        $data->userid = $USER->id;
+        $data->courseid = $courseid;
+        $data->fileid = $fileid;
+        $data->to_path = $pathname;
 
-        events_trigger('simple_restore_selected', $event_data);
+        // Handlers do the correct copying
+        events_trigger('simple_restore_selected_' . $name , $data);
+
+        if (empty($data->filename)) {
+            throw new Exception(simple_restore_utils::_s('no_file'));
+        }
 
         return $filename;
     }
@@ -207,6 +99,7 @@ class simple_restore {
     function __construct($course, $filename, $restore_to = 0) {
         if(empty($course))
             throw new Exception(simple_restore_utils::_s('no_context'));
+
         if(empty($filename))
             throw new Exception(simple_restore_utils::_s('no_file'));
 

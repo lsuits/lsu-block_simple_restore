@@ -5,6 +5,8 @@ require_once 'lib.php';
 
 $courseid = required_param('id', PARAM_INT);
 $restore_to = optional_param('restore_to', 0, PARAM_INT);
+
+$name = optional_param('name', null, PARAM_RAW);
 $action = optional_param('action', null, PARAM_TEXT);
 $file = optional_param('fileid', null, PARAM_RAW);
 
@@ -21,8 +23,8 @@ $context = get_context_instance(CONTEXT_COURSE, $courseid);
 require_capability('block/simple_restore:canrestore', $context);
 
 // Chosen a file
-if($file and $action) {
-    $filename = simple_restore_utils::prep_restore($file, $course->id);
+if ($file and $action and $name) {
+    $filename = simple_restore_utils::prep_restore($file, $name, $courseid);
     redirect(new moodle_url('/blocks/simple_restore/restore.php', array(
         'contextid' => $context->id,
         'filename' => $filename,
