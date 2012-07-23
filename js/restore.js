@@ -1,23 +1,32 @@
-(function() {
-  $(document).ready(function() {
+(function(){
+  M.block_simple_restore = {};
+  M.block_simple_restore.init = function(Y) {
     var pull;
     pull = function(value) {
-      return $("input[name=" + value + "]").val();
+      return Y.one("input[name=" + value + "]").get('value');
     };
-    return $("form[method=POST]").submit(function() {
-      var loading, params;
+    return Y.one("form[method=POST]").on('submit', function(e) {
+      var params;
+      e.preventDefault();
+      // Necessary caching because we mess with DOM
       params = {
         contextid: pull("contextid"),
         restore_to: pull("restore_to"),
         filename: pull("filename"),
         confirm: pull("confirm")
       };
-      loading = $("#restore_loading").html();
-      $(".buttons").html(loading);
-      $.post("restore.php", params, function(data) {
-        return $("#notice").html(data);
+      Y.one(".buttons").getDOMNode().innerHTML = Y.one("#restore_loading").getDOMNode().innerHTML;
+      Y.io('restore.php', {
+        method: "POST",
+        data: params,
+        "on": {
+          success: function(id, result) {
+            Y.one('#notice').getDOMNode().innerHTML = result.response;
+            return Y.one('#notice').getDOMNode().innerHTML;
+          }
+        }
       });
       return false;
     });
-  });
-}).call(this);
+  };
+})();

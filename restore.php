@@ -26,8 +26,12 @@ $PAGE->navbar->add($restore_heading);
 $PAGE->set_title($blockname . ': ' . $restore_heading);
 $PAGE->set_heading($blockname . ': ' . $restore_heading);
 
-$PAGE->requires->js('/lib/jquery.js');
-$PAGE->requires->js('/blocks/simple_restore/js/restore.js');
+$module = array(
+    'name' => 'block_simple_restore',
+    'fullpath' => '/blocks/simple_restore/js/restore.js',
+    'requires' => array('base', 'io', 'node')
+);
+$PAGE->requires->js_init_call('M.block_simple_restore.init', null, false, $module);
 
 $restore = new simple_restore($course, $filename, $restore_to);
 $header = $course->fullname;

@@ -1,19 +1,29 @@
-$(document).ready ->
-    pull = (value) ->
-        $("input[name="+value+"]").val()
+M.block_simple_restore = {}
 
-    $("form[method=POST]").submit ->
+M.block_simple_restore.init = (Y) ->
+    pull = (value) -> Y.one("input[name="+value+"]").get 'value'
+
+    Y.one("form[method=POST]").on 'submit', (e) ->
+        e.preventDefault()
+
         # Necessary caching because we mess with DOM
-        params =
-            contextid: pull "contextid"
-            restore_to: pull "restore_to"
-            filename: pull "filename"
-            confirm: pull "confirm"
+        params = {
+            contextid: pull "contextid",
+            restore_to: pull "restore_to",
+            filename: pull "filename",
+            confirm: pull "confirm",
+        }
 
-        loading = $("#restore_loading").html()
-        $(".buttons").html loading
+        Y.one(".buttons").getDOMNode().innerHTML =
+            Y.one("#restore_loading").getDOMNode().innerHTML
 
-        $.post "restore.php", params, (data) ->
-            $("#notice").html data
+        Y.io 'restore.php', {
+            method: "POST",
+            data: params,
+            "on": {
+                success: (id, result) ->
+                    Y.one('#notice').getDOMNode().innerHTML = result.response
+            }
+        }
 
         false
