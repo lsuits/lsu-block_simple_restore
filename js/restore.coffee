@@ -22,7 +22,7 @@ M.block_simple_restore.init = (Y) ->
             data: params,
             "on": {
                 success: (id, result) ->
-                    Y.one('#notice').getDOMNode().innerHTML = result.response
+                    Y.one('#notice').getDOMNode().innerHTML = result.responseText
             }
         }
 
