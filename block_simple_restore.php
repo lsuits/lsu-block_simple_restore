@@ -10,7 +10,11 @@ class block_simple_restore extends block_list {
     function applicable_formats() {
         return array('site' => false, 'course' => true, 'my' => false);
     }
-
+    
+    function has_config(){
+        return true;
+    }
+    
     function get_content() {
         global $COURSE, $OUTPUT;
         if($this->content !== NULL) {
