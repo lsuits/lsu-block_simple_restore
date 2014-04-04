@@ -16,7 +16,7 @@ class block_simple_restore extends block_list {
     }
     
     function get_content() {
-        global $COURSE, $OUTPUT;
+        global $CFG, $COURSE, $OUTPUT, $SITE;
         if($this->content !== NULL) {
             return $this->content;
         }
