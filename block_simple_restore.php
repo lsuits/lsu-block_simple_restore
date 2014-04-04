@@ -8,7 +8,7 @@ class block_simple_restore extends block_list {
     }
 
     function applicable_formats() {
-        return array('site' => false, 'course' => true, 'my' => false);
+        return array('site' => true, 'course' => true, 'my' => false);
     }
     
     function has_config(){
