@@ -19,11 +19,19 @@ if(!$course = $DB->get_record('course', array('id' => $courseid))) {
 
 require_login();
 
+
 $context = get_context_instance(CONTEXT_COURSE, $courseid);
 require_capability('block/simple_restore:canrestore', $context);
 
 // Chosen a file
 if ($file and $action and $name) {
+
+    if($courseid == SITEID){
+        simple_restore_utils::includes();
+        $courseid = restore_dbops::create_new_course('mytest2', 'mytest2_full', 1);
+        $context = get_context_instance(CONTEXT_COURSE, $courseid);
+    }
+
     $filename = simple_restore_utils::prep_restore($file, $name, $courseid);
     redirect(new moodle_url('/blocks/simple_restore/restore.php', array(
         'contextid' => $context->id,
@@ -61,7 +69,7 @@ if (empty($shortname) and $is_admin) {
         $warn = $OUTPUT->notification(simple_restore_utils::_s('no_filter'));
     }
 
-    $form->set_data(array('id' => $courseid));
+    $form->set_data(array('id' => $courseid, 'restore_to' =>$restore_to));
 
     echo $OUTPUT->header();
     echo $OUTPUT->heading(simple_restore_utils::_s('adminfilter'));

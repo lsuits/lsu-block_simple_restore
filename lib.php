@@ -125,7 +125,13 @@ class simple_restore {
         $_POST['sesskey'] = sesskey();
         $_POST['filepath'] = $this->rip_value($restore, 'filepath');
         $_POST['target'] = $this->restore_to;
-        $_POST['targetid'] = $this->course->id;
+
+        // @todo find out why this needs to be set differently
+        if($this->restore_to == 2){
+            $_POST['targetid'] = $this->course->category;
+        }else{
+            $_POST['targetid'] = $this->course->id;
+        }
 
         $rtn = restore_ui::engage_independent_stage(
             restore_ui::STAGE_DESTINATION, $this->context->id
@@ -213,6 +219,10 @@ class simple_restore {
     public function execute() {
         simple_restore_utils::includes();
 
+        // archive mode
+//        if($this->restore_to == 2){
+//            return $this->archive_mode_execute();
+//        }
         // Confirmed ... process destination
         $confirmed = $this->process_destination($this->process_confirm());
 
@@ -253,4 +263,83 @@ class simple_restore {
 
         return true;
     }
+
+    public function archive_mode_execute() {
+        global $CFG, $DB, $USER;
+
+        simple_restore_utils::includes();
+
+        $extractname = restore_controller::get_tempdir_name($this->course->id, $USER->id);
+        $extractpath  = $CFG->tempdir . '/backup/' . $extractname;
+        $filepath        = $CFG->tempdir.'/backup/'.$this->filename;
+
+        if (!file_exists($filepath. "/moodle_backup.xml")) {
+            $fb = get_file_packer();
+            $fb->extract_to_pathname("$CFG->tempdir/backup/".$this->filename, $extractpath);
+        }
+
+        $rc = new restore_controller($extractname, $this->course->id,
+                backup::INTERACTIVE_NO, backup::MODE_SAMESITE, $USER->id, backup::TARGET_NEW_COURSE);
+
+        foreach(array_values($this->get_settings()) as $config) {
+            if($rc->get_plan()->setting_exists($config->name)){
+                $setting = $rc->get_plan()->get_setting($config->name);
+                if ($setting->get_status() == backup_setting::NOT_LOCKED) {
+                    $setting->set_value($config->value);
+                }
+            }
+        }
+
+        if (!$rc->execute_precheck()) {
+            $precheckresults = $rc->get_precheck_results();
+            if (is_array($precheckresults) && !empty($precheckresults['errors'])) {
+                if (empty($CFG->keeptempdirectoriesonbackup)) {
+                    fulldelete($filepath);
+                }
+
+                $errorinfo = '';
+
+                foreach ($precheckresults['errors'] as $error) {
+                    $errorinfo .= $error;
+                }
+
+                if (array_key_exists('warnings', $precheckresults)) {
+                    foreach ($precheckresults['warnings'] as $warning) {
+                        $errorinfo .= $warning;
+                    }
+                }
+
+                throw new moodle_exception('backupprecheckerrors', 'webservice', '', $errorinfo);
+            }
+        }
+
+        $rc->execute_plan();
+        $rc->destroy();
+
+        $course = $DB->get_record('course', array('id' => $this->course->id), '*', MUST_EXIST);
+//        $course->fullname = $params['fullname'];
+//        $course->shortname = $params['shortname'];
+//        $course->visible = $params['visible'];
+
+        // Set shortname and fullname back.
+        $DB->update_record('course', $course);
+
+        if (empty($CFG->keeptempdirectoriesonbackup)) {
+            fulldelete($filepath);
+        }
+
+        // @TODO
+        // Delete the course backup file created by this WebService. Originally located in the course backups area.
+//        $file->delete();
+
+//        return array('id' => $course->id, 'shortname' => $course->shortname);
+        return true;
+    }
+    
+    private function get_settings(){
+        global $DB;
+        $settings = $DB->get_records('config_plugins', array('plugin'=>'simple_restore'), null, 'id,name,value');
+        return $settings;
+    }
+
 }

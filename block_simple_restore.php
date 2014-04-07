@@ -26,6 +26,19 @@ class block_simple_restore extends block_list {
             return $this->content;
         }
 
+        if($COURSE->id != SITEID){
+            $content = $this->get_course_content();
+        }else{
+            $content = $this->get_site_content();
+        }
+
+        $content->footer = '';
+        $this->content = $content;
+        return $this->content;
+    }
+
+    private function get_course_content(){
+        global $COURSE, $OUTPUT;
         $content = new stdclass;
 
         $import_str = simple_restore_utils::_s('restore_course');
@@ -52,8 +65,27 @@ class block_simple_restore extends block_list {
             $OUTPUT->pix_icon('overwrite', $delete_str, 'block_simple_restore', $params)
         );
 
-        $content->footer = '';
-        $this->content = $content;
-        return $this->content;
+        return $content;
+    }
+
+    private function get_site_content(){
+        global $COURSE, $OUTPUT;
+        $content = new stdclass;
+
+        $archive_str = simple_restore_utils::_s('archive_restore');
+
+        $gen_link = function ($restore_to, $text) use ($COURSE) {
+            return html_writer::link(
+                new moodle_url('/blocks/simple_restore/list.php', array(
+                    'id' => $COURSE->id,
+                    'restore_to' => $restore_to
+                )), $text
+            );
+        };
+
+        $content->items = array(
+            $gen_link(2, $archive_str),
+        );
+        return $content;
     }
 } 
