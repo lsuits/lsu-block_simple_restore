@@ -33,8 +33,10 @@ if ($file and $action and $name) {
     if($courseid == SITEID && $archive){
         simple_restore_utils::includes();
         list($fullname, $category) = simple_restore_utils::coursedata_from_filename($file);
-        if(false == ($category = $DB->get_record('course_categories', array('name'=>$category)))){
-            $category = coursecat::create(array('name'=>$category->name));
+        if(!$DB->record_exists('course_categories', array('name'=>$category))){
+            $category = coursecat::create(array('name'=>$category));
+        }else{
+            $category = $DB->get_record('course_categories', array('name'=>$category));
         }
         $courseid = restore_dbops::create_new_course($fullname, $fullname, $category->id);
         $context  = get_context_instance(CONTEXT_COURSE, $courseid);
