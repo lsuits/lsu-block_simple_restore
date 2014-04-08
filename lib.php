@@ -154,6 +154,7 @@ class simple_restore {
         // Forge posts
         $_POST['restore'] = $restore->get_restoreid();
 
+        // get all tasks from the UI object through reflection.
         $tasks = $this->rip_ui($restore)->get_tasks();
         foreach ($tasks as $task) {
             $settings = $task->get_settings();
@@ -219,10 +220,10 @@ class simple_restore {
     public function execute() {
         simple_restore_utils::includes();
 
-        // archive mode
-//        if($this->restore_to == 2){
-//            return $this->archive_mode_execute();
-//        }
+//         archive mode
+        if($this->restore_to == 2){
+            return $this->archive_mode_execute();
+        }
         // Confirmed ... process destination
         $confirmed = $this->process_destination($this->process_confirm());
 
@@ -270,8 +271,8 @@ class simple_restore {
         simple_restore_utils::includes();
 
         $extractname = restore_controller::get_tempdir_name($this->course->id, $USER->id);
-        $extractpath  = $CFG->tempdir . '/backup/' . $extractname;
-        $filepath        = $CFG->tempdir.'/backup/'.$this->filename;
+        $extractpath = $CFG->tempdir . '/backup/' . $extractname;
+        $filepath    = $CFG->tempdir.'/backup/'.$this->filename;
 
         if (!file_exists($filepath. "/moodle_backup.xml")) {
             $fb = get_file_packer();
@@ -279,9 +280,16 @@ class simple_restore {
         }
 
         $rc = new restore_controller($extractname, $this->course->id,
-                backup::INTERACTIVE_NO, backup::MODE_SAMESITE, $USER->id, backup::TARGET_NEW_COURSE);
+                backup::INTERACTIVE_NO, backup::MODE_GENERAL, $USER->id, backup::TARGET_NEW_COURSE);
+        
+        // need the enrol_migrate setting, otherwise no enrollments!
+        $migrate_setting = new stdClass();
+        $migrate_setting->name = 'enrol_migratetomanual';
+        $migrate_setting->value = 1;
+        $config_settings = array_values($this->get_settings());
+        array_unshift($config_settings, $migrate_setting);
 
-        foreach(array_values($this->get_settings()) as $config) {
+        foreach($config_settings as $config) {
             if($rc->get_plan()->setting_exists($config->name)){
                 $setting = $rc->get_plan()->get_setting($config->name);
                 if ($setting->get_status() == backup_setting::NOT_LOCKED) {
@@ -312,14 +320,14 @@ class simple_restore {
                 throw new moodle_exception('backupprecheckerrors', 'webservice', '', $errorinfo);
             }
         }
+        
+        $info = $this->rip_value($rc, 'info');
+        $course = $DB->get_record('course', array('id' => $this->course->id), '*', MUST_EXIST);
+        $course->visible   = 1;
+        list($course->fullname, $course->shortname) = restore_dbops::calculate_course_names($course->id, $info->original_course_fullname, $info->original_course_shortname);
 
         $rc->execute_plan();
         $rc->destroy();
-
-        $course = $DB->get_record('course', array('id' => $this->course->id), '*', MUST_EXIST);
-//        $course->fullname = $params['fullname'];
-//        $course->shortname = $params['shortname'];
-//        $course->visible = $params['visible'];
 
         // Set shortname and fullname back.
         $DB->update_record('course', $course);
