@@ -16,7 +16,7 @@ class block_simple_restore extends block_list {
     }
     
     function get_content() {
-        global $CFG, $COURSE, $OUTPUT, $SITE;
+        global $CFG, $COURSE, $OUTPUT;
         if($this->content !== NULL) {
             return $this->content;
         }
@@ -86,6 +86,8 @@ class block_simple_restore extends block_list {
         $content->items = array(
             $gen_link(2, $archive_str),
         );
+        // @todo add icon here
+        $content->icons = array();
         return $content;
     }
 } 
