@@ -344,7 +344,6 @@ class simple_restore {
             }
         }
         
-//        $info = $this->rip_value($rc, 'info');
         $course = $DB->get_record('course', array('id' => $this->course->id), '*', MUST_EXIST);
         $course->visible   = 1;
         list($course->fullname, $course->shortname) = restore_dbops::calculate_course_names($course->id, $course->fullname, $course->shortname);
