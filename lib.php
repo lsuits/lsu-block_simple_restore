@@ -88,6 +88,29 @@ abstract class simple_restore_utils {
 
         return $filename;
     }
+    
+    /**
+     * Get course name and category and owner? from filename.
+     * @param string $filename 
+     */
+    public static function coursedata_from_filename($filename){
+        $prefix = 'backadel';
+        if (substr($filename, 0, strlen($prefix)) == $prefix) {
+            $filename = substr($filename, strlen($prefix)+1);
+        }
+        
+        $chunks = explode('_', $filename);
+        $meta = $chunks[0];
+        
+        $metachunks = explode('-', $meta);
+        
+        $fullname = implode(' ', $metachunks);
+
+        
+        $category = $metachunks[2];
+        
+        return array($fullname, $category);
+    }
 }
 
 class simple_restore {
@@ -220,8 +243,8 @@ class simple_restore {
     public function execute() {
         simple_restore_utils::includes();
 
-//         archive mode
-        if($this->restore_to == 2){
+        //archive mode
+        if($this->restore_to == 2 && get_config('simple_restore', 'is_archive_server')){
             return $this->archive_mode_execute();
         }
         // Confirmed ... process destination
@@ -321,10 +344,10 @@ class simple_restore {
             }
         }
         
-        $info = $this->rip_value($rc, 'info');
+//        $info = $this->rip_value($rc, 'info');
         $course = $DB->get_record('course', array('id' => $this->course->id), '*', MUST_EXIST);
         $course->visible   = 1;
-        list($course->fullname, $course->shortname) = restore_dbops::calculate_course_names($course->id, $info->original_course_fullname, $info->original_course_shortname);
+        list($course->fullname, $course->shortname) = restore_dbops::calculate_course_names($course->id, $course->fullname, $course->shortname);
 
         $rc->execute_plan();
         $rc->destroy();

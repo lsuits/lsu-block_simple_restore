@@ -1,7 +1,8 @@
 <?php
-
+global $CFG;
 require_once '../../config.php';
 require_once 'lib.php';
+require_once $CFG->libdir.'/coursecatlib.php' ;
 
 $courseid = required_param('id', PARAM_INT);
 $restore_to = optional_param('restore_to', 0, PARAM_INT);
@@ -12,6 +13,9 @@ $file = optional_param('fileid', null, PARAM_RAW);
 
 // Needed for admins, as they need to query the courses
 $shortname = optional_param('shortname', null, PARAM_TEXT);
+
+// determine if we are in archive mode.
+$archive = get_config('simple_restore', 'is_archive_server');
 
 if(!$course = $DB->get_record('course', array('id' => $courseid))) {
     print_error('no_course', 'block_simple_restore', '', $courseid);
@@ -26,10 +30,14 @@ require_capability('block/simple_restore:canrestore', $context);
 // Chosen a file
 if ($file and $action and $name) {
 
-    if($courseid == SITEID){
+    if($courseid == SITEID && $archive){
         simple_restore_utils::includes();
-        $courseid = restore_dbops::create_new_course('mytest2', 'mytest2_full', 1);
-        $context = get_context_instance(CONTEXT_COURSE, $courseid);
+        list($fullname, $category) = simple_restore_utils::coursedata_from_filename($file);
+        if(false == ($category = $DB->get_record('course_categories', array('name'=>$category)))){
+            $category = coursecat::create(array('name'=>$category->name));
+        }
+        $courseid = restore_dbops::create_new_course($fullname, $fullname, $category->id);
+        $context  = get_context_instance(CONTEXT_COURSE, $courseid);
     }
 
     $filename = simple_restore_utils::prep_restore($file, $name, $courseid);
