@@ -61,6 +61,14 @@ if ($ADMIN->fulltree) {
         }
     };
 
+    $settings->add(
+            new admin_setting_configcheckbox(
+                    $_k('is_archive_server'), 
+                    $_s('is_archive_server'), 
+                    $_s('is_archive_server_desc'), 
+                    0,1,0)
+            );
+
     // Start building the Admin screen.
     $settings->add(
         new admin_setting_heading(

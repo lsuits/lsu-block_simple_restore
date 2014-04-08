@@ -5,7 +5,6 @@ $string['simple_restore:canrestore'] = 'Users can use the Simple Restore';
 $string['block/simple_restore:addinstance'] = 'Add Simple Restore block to course';
 $string['delete_restore'] = 'Overwrite current course';
 $string['restore_course'] = 'Import all materials into current course';
-$string['archive_restore'] = "restore to new course";
 $string['no_course'] = 'No course found for id: {$a}';
 $string['no_context'] = 'Empty context: A restore object must be given a context.';
 $string['no_file'] = 'Empty file: A restore object must be given a file.';
@@ -48,3 +47,9 @@ $string['module_desc'] = 'These are module restore settings to be applied to any
 $string['section'] = 'Section';
 $string['restore_included'] = 'Restore {$a}';
 $string['restore_userinfo'] = 'Restore {$a} user data';
+
+$string['is_archive_server'] = 'Archive Server Mode';
+$string['is_archive_server_desc'] = 'Archive Server Mode determines whether or not the block will be available on the My page or in Course pages, and alters the functionality to suit the needs of a read-only archive server.';
+$string['archive_restore'] = 'Restore Archived Course';
+//$string['simple_restore:myaddinstance'] = 'Add Simple restore block to My page';
+//$string['simple_restore:addinstance'] = 'Add Simple restore block to Site page';
