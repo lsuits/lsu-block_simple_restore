@@ -55,9 +55,14 @@ abstract class simple_restore_utils {
     }
 
     public static function heading($restore_to) {
-        return $restore_to == 0 ?
-                simple_restore_utils::_s('delete_restore') :
-                simple_restore_utils::_s('restore_course');
+        switch($restore_to){
+            case 0:
+                return simple_restore_utils::_s('delete_restore');
+            case 1:
+                return simple_restore_utils::_s('restore_course');
+            case 2:
+                return simple_restore_utils::_s('restore_course_archive');
+        }
     }
 
     public static function prep_restore($fileid, $name, $courseid) {
@@ -246,9 +251,8 @@ class simple_restore {
         //archive mode
         if($this->restore_to == 2 && get_config('simple_restore', 'is_archive_server')){
             return $this->archive_mode_execute();
-        }else{
-            mtrace("NOT running archive branch");
         }
+
         // Confirmed ... process destination
         $confirmed = $this->process_destination($this->process_confirm());
 

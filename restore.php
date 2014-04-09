@@ -34,7 +34,7 @@ $module = array(
 
 // @todo - re-neable.
 // temp disable js in order to see errors
-//$PAGE->requires->js_init_call('M.block_simple_restore.init', null, false, $module);
+$PAGE->requires->js_init_call('M.block_simple_restore.init', null, false, $module);
 
 $restore = new simple_restore($course, $filename, $restore_to);
 $header = $course->fullname;
@@ -44,16 +44,16 @@ if($confirm and data_submitted()) {
 
 // @todo - re-neable.
 // disable try..catch in order to see exceptions.
-//    try {
+    try {
         $restore->execute();
 
         echo $OUTPUT->notification(
             get_string('restoreexecutionsuccess', 'backup'), 'notifysuccess'
         );
-//    } catch (Exception $e) {
-//        $a = $e->getMessage();
-//        echo $OUTPUT->notification(simple_restore_utils::_s('no_restore', $a));
-//    }
+    } catch (Exception $e) {
+        $a = $e->getMessage();
+        echo $OUTPUT->notification(simple_restore_utils::_s('no_restore', $a));
+    }
 
     echo $OUTPUT->continue_button(
         new moodle_url('/course/view.php', array('id' => $course->id))
