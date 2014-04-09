@@ -246,6 +246,8 @@ class simple_restore {
         //archive mode
         if($this->restore_to == 2 && get_config('simple_restore', 'is_archive_server')){
             return $this->archive_mode_execute();
+        }else{
+            mtrace("NOT running archive branch");
         }
         // Confirmed ... process destination
         $confirmed = $this->process_destination($this->process_confirm());
