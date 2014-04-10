@@ -32,8 +32,6 @@ $module = array(
     'requires' => array('base', 'io', 'node')
 );
 
-// @todo - re-neable.
-// temp disable js in order to see errors
 $PAGE->requires->js_init_call('M.block_simple_restore.init', null, false, $module);
 
 $restore = new simple_restore($course, $filename, $restore_to);
@@ -42,8 +40,6 @@ $header = $course->fullname;
 // This conditional returns html content for the ajax reponse
 if($confirm and data_submitted()) {
 
-// @todo - re-neable.
-// disable try..catch in order to see exceptions.
     try {
         $restore->execute();
 

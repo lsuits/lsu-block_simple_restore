@@ -156,16 +156,10 @@ class simple_restore {
     }
 
     private function process_destination($restore) {
-        $_POST['sesskey'] = sesskey();
-        $_POST['filepath'] = $this->rip_value($restore, 'filepath');
-        $_POST['target'] = $this->restore_to;
-
-        // @todo find out why this needs to be set differently
-        if($this->restore_to == 2){
-            $_POST['targetid'] = $this->course->category;
-        }else{
-            $_POST['targetid'] = $this->course->id;
-        }
+        $_POST['sesskey']   = sesskey();
+        $_POST['filepath']  = $this->rip_value($restore, 'filepath');
+        $_POST['target']    = $this->restore_to;
+        $_POST['targetid']  = $this->course->id;
 
         $rtn = restore_ui::engage_independent_stage(
             restore_ui::STAGE_DESTINATION, $this->context->id
