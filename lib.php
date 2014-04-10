@@ -331,14 +331,9 @@ class simple_restore {
         $rc = new restore_controller($extractname, $this->course->id,
                 backup::INTERACTIVE_NO, backup::MODE_GENERAL, $USER->id, backup::TARGET_NEW_COURSE);
         
-        // need the enrol_migrate setting, otherwise no enrollments!
-        $migrate_setting = new stdClass();
-        $migrate_setting->name = 'enrol_migratetomanual';
-        $migrate_setting->value = 1;
-        $config_settings = array_values($this->get_settings());
-        array_unshift($config_settings, $migrate_setting);
-
         // iterate through our settings and make sure they are reflected in the restore plan.
+        $config_settings = array_values($this->get_settings());
+
         foreach($config_settings as $config) {
             if($rc->get_plan()->setting_exists($config->name)){
                 $setting = $rc->get_plan()->get_setting($config->name);

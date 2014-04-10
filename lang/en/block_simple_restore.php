@@ -29,6 +29,7 @@ $string['general'] = 'General Restore Settings';
 $string['general_desc'] = 'These are general restore settings to be applied to any selected backup.';
 $string['course'] = 'Course Specific Settings';
 $string['course_desc'] = 'These are course restore settings to be applied to any selected backup (when necessary).';
+$string['enrol_migratetomanual'] = 'Migrate enrollments';
 $string['users'] = 'Restore users';
 $string['user_files'] = 'Restore user files';
 $string['role_assignments'] = 'Restore roles';
