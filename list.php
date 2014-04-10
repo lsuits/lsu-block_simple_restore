@@ -14,15 +14,11 @@ $file = optional_param('fileid', null, PARAM_RAW);
 // Needed for admins, as they need to query the courses
 $shortname = optional_param('shortname', null, PARAM_TEXT);
 
-// determine if we are in archive mode.
-$archive = get_config('simple_restore', 'is_archive_server');
-
 if(!$course = $DB->get_record('course', array('id' => $courseid))) {
     print_error('no_course', 'block_simple_restore', '', $courseid);
 }
 
 require_login();
-
 
 $context = get_context_instance(CONTEXT_COURSE, $courseid);
 require_capability('block/simple_restore:canrestore', $context);
@@ -30,18 +26,27 @@ require_capability('block/simple_restore:canrestore', $context);
 // Chosen a file
 if ($file and $action and $name) {
 
-    if($courseid == SITEID && $archive){
+    if($courseid == SITEID && get_config('simple_restore', 'is_archive_server')){
         simple_restore_utils::includes();
+
+        // parse the filename for course fullname and category.
         list($fullname, $category) = simple_restore_utils::coursedata_from_filename($file);
+
+        // get a category object,
         if(!$DB->record_exists('course_categories', array('name'=>$category))){
+            // create the category if it doesn't exits
             $category = coursecat::create(array('name'=>$category));
         }else{
+            // otherwise, just fetch it.
             $category = $DB->get_record('course_categories', array('name'=>$category));
         }
+
+        // prep_restore needs a course and a context.
         $courseid = restore_dbops::create_new_course($fullname, $fullname, $category->id);
         $context  = get_context_instance(CONTEXT_COURSE, $courseid);
     }
 
+    // move the backup file into place
     $filename = simple_restore_utils::prep_restore($file, $name, $courseid);
     redirect(new moodle_url('/blocks/simple_restore/restore.php', array(
         'contextid' => $context->id,

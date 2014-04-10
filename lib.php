@@ -294,15 +294,29 @@ class simple_restore {
         return true;
     }
 
+    /**
+     * Create a new course from the selected backup file.
+     * 
+     * This method is inspired by @seecore_course_external::duplicate_course 
+     * found in /course/externallib.php.
+     * 
+     * @global type $CFG
+     * @global type $DB
+     * @global type $USER
+     * @return boolean
+     * @throws moodle_exception
+     */
     public function archive_mode_execute() {
         global $CFG, $DB, $USER;
 
         simple_restore_utils::includes();
 
+        // setup tempdir for the restore process
         $extractname = restore_controller::get_tempdir_name($this->course->id, $USER->id);
         $extractpath = $CFG->tempdir . '/backup/' . $extractname;
         $filepath    = $CFG->tempdir.'/backup/'.$this->filename;
 
+        // .zip needs to be unzipped.
         if (!file_exists($filepath. "/moodle_backup.xml")) {
             $fb = get_file_packer();
             $fb->extract_to_pathname("$CFG->tempdir/backup/".$this->filename, $extractpath);
@@ -318,6 +332,7 @@ class simple_restore {
         $config_settings = array_values($this->get_settings());
         array_unshift($config_settings, $migrate_setting);
 
+        // iterate through our settings and make sure they are reflected in the restore plan.
         foreach($config_settings as $config) {
             if($rc->get_plan()->setting_exists($config->name)){
                 $setting = $rc->get_plan()->get_setting($config->name);
@@ -327,6 +342,7 @@ class simple_restore {
             }
         }
 
+        // setup restore process and ensure there are no errors
         if (!$rc->execute_precheck()) {
             $precheckresults = $rc->get_precheck_results();
             if (is_array($precheckresults) && !empty($precheckresults['errors'])) {
@@ -345,30 +361,30 @@ class simple_restore {
                         $errorinfo .= $warning;
                     }
                 }
-
                 throw new moodle_exception('backupprecheckerrors', 'webservice', '', $errorinfo);
             }
         }
-        
-        $course = $DB->get_record('course', array('id' => $this->course->id), '*', MUST_EXIST);
-        $course->visible   = 1;
-        list($course->fullname, $course->shortname) = restore_dbops::calculate_course_names($course->id, $course->fullname, $course->shortname);
+
+        // get the coreect course name; prevents dupe names.
+        list($this->course->fullname, $this->course->shortname) = 
+                restore_dbops::calculate_course_names(
+                        $this->course->id, 
+                        $this->course->fullname, 
+                        $this->course->shortname
+                        );
 
         $rc->execute_plan();
         $rc->destroy();
 
-        // Set shortname and fullname back.
-        $DB->update_record('course', $course);
+        // Set shortname and fullname back, ensure visibility.
+        $this->course->visible = 1;
+        $DB->update_record('course', $this->course);
 
+        // clean up after ourselves.
         if (empty($CFG->keeptempdirectoriesonbackup)) {
             fulldelete($filepath);
         }
 
-        // @TODO
-        // Delete the course backup file created by this WebService. Originally located in the course backups area.
-//        $file->delete();
-
-//        return array('id' => $course->id, 'shortname' => $course->shortname);
         return true;
     }
     
