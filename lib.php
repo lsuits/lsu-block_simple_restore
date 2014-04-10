@@ -96,23 +96,29 @@ abstract class simple_restore_utils {
     
     /**
      * Get course name and category and owner? from filename.
+     * 
+     * NB: this function expects files from backadel whose names
+     * begin as 'backadel-', 
+     * for example: 
+     * backup-moodle2-course-2-2014_spring_tst2_2011_for_instructor_four-20140407-1539.mbz
+     * 
      * @param string $filename 
      */
     public static function coursedata_from_filename($filename){
         $prefix = 'backadel';
         if (substr($filename, 0, strlen($prefix)) == $prefix) {
             $filename = substr($filename, strlen($prefix)+1);
+        }else{
+            //@todo - do something better than throw an error if it isn't a backadel file.
+            // Consider restricting the choice of filesin the first place!
+            throw new exception("Wrong file type!");
         }
         
-        $chunks = explode('_', $filename);
-        $meta = $chunks[0];
-        
+        $chunks     = explode('_', $filename);
+        $meta       = $chunks[0];
         $metachunks = explode('-', $meta);
-        
-        $fullname = implode(' ', $metachunks);
-
-        
-        $category = $metachunks[2];
+        $fullname   = implode(' ', $metachunks);
+        $category   = $metachunks[2];
         
         return array($fullname, $category);
     }
