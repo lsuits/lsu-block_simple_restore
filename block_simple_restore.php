@@ -37,6 +37,13 @@ class block_simple_restore extends block_list {
         return $this->content;
     }
 
+    /**
+     * Builds the content object apropriate to course contexts.
+     * 
+     * @global type $COURSE
+     * @global type $OUTPUT
+     * @return \stdclass
+     */
     private function get_course_content(){
         global $COURSE, $OUTPUT;
         $content = new stdclass;
@@ -44,18 +51,9 @@ class block_simple_restore extends block_list {
         $import_str = simple_restore_utils::_s('restore_course');
         $delete_str = simple_restore_utils::_s('delete_restore');
 
-        $gen_link = function ($restore_to, $text) use ($COURSE) {
-            return html_writer::link(
-                new moodle_url('/blocks/simple_restore/list.php', array(
-                    'id' => $COURSE->id,
-                    'restore_to' => $restore_to
-                )), $text
-            );
-        };
-
         $content->items = array(
-            $gen_link(1, $import_str),
-            $gen_link(0, $delete_str)
+            $this->gen_link(1, $import_str),
+            $this->gen_link(0, $delete_str)
         );
 
         $params = array('class' => 'icon');
@@ -68,26 +66,37 @@ class block_simple_restore extends block_list {
         return $content;
     }
 
+    /**
+     * Build the content object appropriate to the SITE context.
+     * 
+     * @global type $COURSE
+     * @global type $OUTPUT
+     * @return \stdclass
+     */
     private function get_site_content(){
         global $COURSE, $OUTPUT;
         $content = new stdclass;
 
         $archive_str = simple_restore_utils::_s('archive_restore');
 
-        $gen_link = function ($restore_to, $text) use ($COURSE) {
+        $content->items = array(
+            $this->gen_link(2, $archive_str),
+        );
+        // @todo add icon here
+        $content->icons = array();
+        return $content;
+    }
+    
+    /**
+     * helper fn for generating the block links.
+     */
+    private function gen_link($restore_to, $text) {
+        global $COURSE;
             return html_writer::link(
                 new moodle_url('/blocks/simple_restore/list.php', array(
                     'id' => $COURSE->id,
                     'restore_to' => $restore_to
                 )), $text
             );
-        };
-
-        $content->items = array(
-            $gen_link(2, $archive_str),
-        );
-        // @todo add icon here
-        $content->icons = array();
-        return $content;
     }
 } 
