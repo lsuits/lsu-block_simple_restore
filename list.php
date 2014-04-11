@@ -25,9 +25,10 @@ if(!$course = $DB->get_record('course', array('id' => $courseid))) {
 require_login();
 
 
-
+// set context and require capabilities depending on archive_mode
 if($archive_mode){
-    $context = require_capability('block/simple_restore:canrestorearchive', context_system::instance());
+    $context = context_system::instance();
+    require_capability('block/simple_restore:canrestorearchive', $context);
 }else{
     $context = get_context_instance(CONTEXT_COURSE, $courseid);
     require_capability('block/simple_restore:canrestore', $context);
@@ -41,7 +42,7 @@ if ($file and $action and $name) {
         simple_restore_utils::includes();
 
         // parse the filename for course fullname and category.
-        list($fullname, $category) = simple_restore_utils::coursedata_from_filename($file);
+        list($fullname, $category) = archive_restore_utils::coursedata_from_filename($file);
 
         // get a category object,
         if(!$DB->record_exists('course_categories', array('name'=>$category))){

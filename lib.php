@@ -93,9 +93,11 @@ abstract class simple_restore_utils {
 
         return $filename;
     }
-    
+}
+
+class archive_restore_utils extends simple_restore_utils {
     /**
-     * Get course name and category and owner? from filename.
+     * Get course name and category from filename.
      * 
      * NB: this function expects files from backadel whose names
      * begin as 'backadel-', 
@@ -109,9 +111,9 @@ abstract class simple_restore_utils {
         if (substr($filename, 0, strlen($prefix)) == $prefix) {
             $filename = substr($filename, strlen($prefix)+1);
         }else{
-            //@todo - do something better than throw an error if it isn't a backadel file.
-            // Consider restricting the choice of filesin the first place!
-            throw new exception("Wrong file type!");
+            // @todo - do something better than throw an error if it isn't a backadel file.
+            // Consider restricting the choice of files in the first place!
+            throw new exception("Archive Restore does not support filenames other than 'backadel-*'");
         }
         
         $chunks     = explode('_', $filename);
@@ -122,11 +124,6 @@ abstract class simple_restore_utils {
         
         return array($fullname, $category);
     }
-
-    public static function filter_user_backups($lists) {
-        
-    }
-
 }
 
 class simple_restore {

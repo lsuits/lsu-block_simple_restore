@@ -9,7 +9,7 @@ $restore_to = optional_param('restore_to', 0, PARAM_INT);
 $confirm = optional_param('confirm', 0, PARAM_INT);
 $loading = optional_param('loading', 0, PARAM_INT);
 
-$archive_mode = get_config('simple_restore','is_archive_server' == 1 && $restore_to == 2);
+$archive_mode = get_config('simple_restore','is_archive_server') == 1 && $restore_to == 2;
 list($context, $course, $cm) = get_context_info_array($contextid);
 
 
@@ -56,7 +56,9 @@ if($confirm and data_submitted()) {
     } catch (Exception $e) {
         $a = $e->getMessage();
         echo $OUTPUT->notification(simple_restore_utils::_s('no_restore', $a));
-        $course->id = $restore_to == 2 ? 1 : $course->id;
+        
+        // in case of an aborted archive restore, the 'new' course will have been deleted.
+        $course->id = $archive_mode == 1 ? 1 : $course->id;
     }
 
     echo $OUTPUT->continue_button(
