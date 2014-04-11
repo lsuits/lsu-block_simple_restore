@@ -14,19 +14,30 @@ $file = optional_param('fileid', null, PARAM_RAW);
 // Needed for admins, as they need to query the courses
 $shortname = optional_param('shortname', null, PARAM_TEXT);
 
+// determine whether archive mode.
+$archive_mode = $courseid == SITEID && get_config('simple_restore', 'is_archive_server');
+
 if(!$course = $DB->get_record('course', array('id' => $courseid))) {
     print_error('no_course', 'block_simple_restore', '', $courseid);
 }
 
+// check permissions.
 require_login();
 
-$context = get_context_instance(CONTEXT_COURSE, $courseid);
-require_capability('block/simple_restore:canrestore', $context);
+
+
+if($archive_mode){
+    $context = require_capability('block/simple_restore:canrestorearchive', context_system::instance());
+}else{
+    $context = get_context_instance(CONTEXT_COURSE, $courseid);
+    require_capability('block/simple_restore:canrestore', $context);
+}
 
 // Chosen a file
 if ($file and $action and $name) {
 
-    if($courseid == SITEID && get_config('simple_restore', 'is_archive_server')){
+    // need to get the course name, etc differently when in archive mode.
+    if($archive_mode){
         simple_restore_utils::includes();
 
         // parse the filename for course fullname and category.
@@ -109,14 +120,16 @@ $data->courseid = $courseid;
 // Admins can filter by shortname
 if ($is_admin) {
     $data->shortname = $shortname;
+}else if($archive_mode){
+    $data->shortname = $USER->firstname.$USER->lastname;
 }
+
 $data->lists = array();
 
 events_trigger('simple_restore_backup_list', $data);
 
 $display_list = function($in, $list) {
     echo $list->html;
-
     return $in || !empty($list->backups);
 };
 

@@ -9,10 +9,10 @@ $restore_to = optional_param('restore_to', 0, PARAM_INT);
 $confirm = optional_param('confirm', 0, PARAM_INT);
 $loading = optional_param('loading', 0, PARAM_INT);
 
+$archive_mode = get_config('simple_restore','is_archive_server' == 1 && $restore_to == 2);
 list($context, $course, $cm) = get_context_info_array($contextid);
 
-require_login($course, null, $cm);
-require_capability('block/simple_restore:canrestore', $context);
+
 
 $blockname = get_string('pluginname', 'block_simple_restore');
 $restore_heading = simple_restore_utils::heading($restore_to);
@@ -32,6 +32,14 @@ $module = array(
     'requires' => array('base', 'io', 'node')
 );
 
+// check requirements according to restore mode.
+if($archive_mode){
+    require_login();
+    require_capability('block/simple_restore:canrestorearchive', $context);
+}else{
+    require_login($course, null, $cm);
+    require_capability('block/simple_restore:canrestore', $context);
+}
 $PAGE->requires->js_init_call('M.block_simple_restore.init', null, false, $module);
 
 $restore = new simple_restore($course, $filename, $restore_to);
@@ -42,13 +50,13 @@ if($confirm and data_submitted()) {
 
     try {
         $restore->execute();
-
         echo $OUTPUT->notification(
             get_string('restoreexecutionsuccess', 'backup'), 'notifysuccess'
         );
     } catch (Exception $e) {
         $a = $e->getMessage();
         echo $OUTPUT->notification(simple_restore_utils::_s('no_restore', $a));
+        $course->id = $restore_to == 2 ? 1 : $course->id;
     }
 
     echo $OUTPUT->continue_button(

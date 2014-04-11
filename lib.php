@@ -122,6 +122,11 @@ abstract class simple_restore_utils {
         
         return array($fullname, $category);
     }
+
+    public static function filter_user_backups($lists) {
+        
+    }
+
 }
 
 class simple_restore {
@@ -308,14 +313,40 @@ class simple_restore {
      */
     public function archive_mode_execute() {
         global $CFG, $DB, $USER;
-
+        require_once $CFG->dirroot.'/enrol/manual/lib.php';
         simple_restore_utils::includes();
+        
+        // enrol the current user as teacher.
+        $plugin       = new enrol_manual_plugin();
+        $plugin->add_instance($this->course);
+
+        $instances    = enrol_get_instances($this->course->id, true);
+        $isntance     = null;
+        foreach($instances as $enrol_instance){
+            if($enrol_instance->enrol == 'manual'){
+                $instance = $enrol_instance;
+                break;
+            }
+        }
+
+        $roleid = $DB->get_field('role', 'id', array('shortname'=>'editingteacher'));
+        $plugin->enrol_user($instance, $USER->id, $roleid);
 
         // setup tempdir for the restore process
         $extractname = restore_controller::get_tempdir_name($this->course->id, $USER->id);
         $extractpath = $CFG->tempdir . '/backup/' . $extractname;
         $filepath    = $CFG->tempdir.'/backup/'.$this->filename;
 
+        if(!has_capability('moodle/restore:userinfo', $this->context, $USER->id)){
+            // delete, abort, etc.
+            echo "deleting temporary course files and materials.";
+            fulldelete($filepath);
+            delete_course($this->course);
+            fix_course_sortorder(); //update course count in catagories
+            // "In order to restore Archived courses, this role must be granted the capability moodle/restore:userinfo - Ask your administrator"
+            throw new restore_controller_exception("no userinfo cap");
+        }
+        
         // .zip needs to be unzipped.
         if (!file_exists($filepath. "/moodle_backup.xml")) {
             $fb = get_file_packer();

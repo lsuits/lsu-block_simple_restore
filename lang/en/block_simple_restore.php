@@ -2,6 +2,7 @@
 
 $string['pluginname'] = 'Simple Restore';
 $string['simple_restore:canrestore'] = 'Users can use the Simple Restore';
+$string['simple_restore:canrestorearchive'] = 'Users can use the Simple Restore for course archives';
 $string['block/simple_restore:addinstance'] = 'Add Simple Restore block to course';
 $string['delete_restore'] = 'Overwrite current course';
 $string['restore_course'] = 'Import all materials into current course';

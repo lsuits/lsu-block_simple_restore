@@ -3,12 +3,25 @@
 require_once $CFG->dirroot . '/blocks/simple_restore/lib.php';
 
 class block_simple_restore extends block_list {
+    public $archive_mode;
+    
     function init() {
-        $this->title = simple_restore_utils::_s('pluginname');
+        global $COURSE;
+        $this->title        = simple_restore_utils::_s('pluginname');
+        $this->archive_mode = $this->get_archive_mode($COURSE->id);
+    }
+    
+    public function get_archive_mode($courseid){
+        $archive      = get_config('simple_restore', 'is_archive_server');
+        $site_context = $courseid == SITEID;
+        $archive_mode = null != $archive && $archive == 1 && $site_context;
+        return $archive_mode;
     }
 
     function applicable_formats() {
-        return array('site' => true, 'course' => true, 'my' => false);
+        $site   = array('site' => true, 'course' => false, 'my' => true);
+        $course = array('site' => false, 'course' => true, 'my' => false);
+        return $this->archive_mode ? $site : $course;
     }
     
     function has_config(){
@@ -21,15 +34,15 @@ class block_simple_restore extends block_list {
             return $this->content;
         }
 
-        $context = get_context_instance(CONTEXT_COURSE, $COURSE->id);
-        if(!simple_restore_utils::permission('canrestore', $context)) {
-            return $this->content;
-        }
-
-        if($COURSE->id != SITEID){
-            $content = $this->get_course_content();
-        }else{
+        // are we in archive mode or course context ?
+        if($this->archive_mode){
             $content = $this->get_site_content();
+        }else{
+            $context = get_context_instance(CONTEXT_COURSE, $COURSE->id);
+            if(!simple_restore_utils::permission('canrestore', $context)) {
+                return $this->content;
+            }
+            $content = $this->get_course_content();
         }
 
         $content->footer = '';
@@ -99,4 +112,4 @@ class block_simple_restore extends block_list {
                 )), $text
             );
     }
-} 
+}
