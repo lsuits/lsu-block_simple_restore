@@ -120,10 +120,7 @@ $data->courseid = $courseid;
 // Admins can filter by shortname
 if ($is_admin) {
     $data->shortname = $shortname;
-}else if($archive_mode){
-    $data->shortname = $USER->firstname.$USER->lastname;
 }
-
 $data->lists = array();
 
 events_trigger('simple_restore_backup_list', $data);
