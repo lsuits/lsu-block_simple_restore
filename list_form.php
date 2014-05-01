@@ -11,6 +11,9 @@ class list_form extends moodleform {
 
         $m->addElement('hidden', 'id');
         $m->setType('id',PARAM_INT);
+        
+        $m->addElement('hidden', 'restore_to');
+        $m->setType('restore_to',PARAM_INT);
 
         $buttons = array(
             $m->createElement('submit', 'submit', get_string('search')),

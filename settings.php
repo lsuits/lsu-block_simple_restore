@@ -7,6 +7,7 @@ if ($ADMIN->fulltree) {
 
     // Course Settings for restore
     $general_settings = array(
+        'enrol_migratetomanual' => 0,
         'users' => 0,
         'user_files' => 0,
         'role_assignments' => 0,
@@ -60,6 +61,15 @@ if ($ADMIN->fulltree) {
             );
         }
     };
+
+    // Archive server mode toggle
+    $settings->add(
+            new admin_setting_configcheckbox(
+                    $_k('is_archive_server'), 
+                    $_s('is_archive_server'), 
+                    $_s('is_archive_server_desc'), 
+                    0,1,0)
+            );
 
     // Start building the Admin screen.
     $settings->add(

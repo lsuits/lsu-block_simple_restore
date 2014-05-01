@@ -55,9 +55,14 @@ abstract class simple_restore_utils {
     }
 
     public static function heading($restore_to) {
-        return $restore_to == 0 ?
-                simple_restore_utils::_s('delete_restore') :
-                simple_restore_utils::_s('restore_course');
+        switch($restore_to){
+            case 0:
+                return simple_restore_utils::_s('delete_restore');
+            case 1:
+                return simple_restore_utils::_s('restore_course');
+            case 2:
+                return simple_restore_utils::_s('restore_course_archive');
+        }
     }
 
     public static function prep_restore($fileid, $name, $courseid) {
@@ -87,6 +92,37 @@ abstract class simple_restore_utils {
         }
 
         return $filename;
+    }
+}
+
+class archive_restore_utils extends simple_restore_utils {
+    /**
+     * Get course name and category from filename.
+     * 
+     * NB: this function expects files from backadel whose names
+     * begin as 'backadel-', 
+     * for example: 
+     * backup-moodle2-course-2-2014_spring_tst2_2011_for_instructor_four-20140407-1539.mbz
+     * 
+     * @param string $filename 
+     */
+    public static function coursedata_from_filename($filename){
+        $prefix = 'backadel';
+        if (substr($filename, 0, strlen($prefix)) == $prefix) {
+            $filename = substr($filename, strlen($prefix)+1);
+        }else{
+            // @todo - do something better than throw an error if it isn't a backadel file.
+            // Consider restricting the choice of files in the first place!
+            throw new exception("Archive Restore does not support filenames other than 'backadel-*'");
+        }
+        
+        $chunks     = explode('_', $filename);
+        $meta       = $chunks[0];
+        $metachunks = explode('-', $meta);
+        $fullname   = implode(' ', $metachunks);
+        $category   = $metachunks[2];
+        
+        return array($fullname, $category);
     }
 }
 
@@ -122,10 +158,10 @@ class simple_restore {
     }
 
     private function process_destination($restore) {
-        $_POST['sesskey'] = sesskey();
-        $_POST['filepath'] = $this->rip_value($restore, 'filepath');
-        $_POST['target'] = $this->restore_to;
-        $_POST['targetid'] = $this->course->id;
+        $_POST['sesskey']   = sesskey();
+        $_POST['filepath']  = $this->rip_value($restore, 'filepath');
+        $_POST['target']    = $this->restore_to;
+        $_POST['targetid']  = $this->course->id;
 
         $rtn = restore_ui::engage_independent_stage(
             restore_ui::STAGE_DESTINATION, $this->context->id
@@ -148,6 +184,7 @@ class simple_restore {
         // Forge posts
         $_POST['restore'] = $restore->get_restoreid();
 
+        // get all tasks from the UI object through reflection.
         $tasks = $this->rip_ui($restore)->get_tasks();
         foreach ($tasks as $task) {
             $settings = $task->get_settings();
@@ -213,6 +250,11 @@ class simple_restore {
     public function execute() {
         simple_restore_utils::includes();
 
+        //archive mode
+        if($this->restore_to == 2 && get_config('simple_restore', 'is_archive_server')){
+            return $this->archive_mode_execute();
+        }
+
         // Confirmed ... process destination
         $confirmed = $this->process_destination($this->process_confirm());
 
@@ -253,4 +295,126 @@ class simple_restore {
 
         return true;
     }
+
+    /**
+     * Create a new course from the selected backup file.
+     * 
+     * This method is inspired by @seecore_course_external::duplicate_course 
+     * found in /course/externallib.php.
+     * 
+     * @global type $CFG
+     * @global type $DB
+     * @global type $USER
+     * @return boolean
+     * @throws moodle_exception
+     */
+    public function archive_mode_execute() {
+        global $CFG, $DB, $USER;
+        require_once $CFG->dirroot.'/enrol/manual/lib.php';
+        simple_restore_utils::includes();
+        
+        // enrol the current user as teacher.
+        $plugin       = new enrol_manual_plugin();
+        $plugin->add_instance($this->course);
+
+        $instances    = enrol_get_instances($this->course->id, true);
+        $isntance     = null;
+        foreach($instances as $enrol_instance){
+            if($enrol_instance->enrol == 'manual'){
+                $instance = $enrol_instance;
+                break;
+            }
+        }
+
+        $roleid = $DB->get_field('role', 'id', array('shortname'=>'editingteacher'));
+        $plugin->enrol_user($instance, $USER->id, $roleid);
+
+        // setup tempdir for the restore process
+        $extractname = restore_controller::get_tempdir_name($this->course->id, $USER->id);
+        $extractpath = $CFG->tempdir . '/backup/' . $extractname;
+        $filepath    = $CFG->tempdir.'/backup/'.$this->filename;
+
+        if(!has_capability('moodle/restore:userinfo', $this->context, $USER->id)){
+            // delete, abort, etc.
+            echo "deleting temporary course files and materials.";
+            fulldelete($filepath);
+            delete_course($this->course);
+            fix_course_sortorder(); //update course count in catagories
+            // "In order to restore Archived courses, this role must be granted the capability moodle/restore:userinfo - Ask your administrator"
+            throw new restore_controller_exception("no userinfo cap");
+        }
+        
+        // .zip needs to be unzipped.
+        if (!file_exists($filepath. "/moodle_backup.xml")) {
+            $fb = get_file_packer();
+            $fb->extract_to_pathname("$CFG->tempdir/backup/".$this->filename, $extractpath);
+        }
+
+        $rc = new restore_controller($extractname, $this->course->id,
+                backup::INTERACTIVE_NO, backup::MODE_GENERAL, $USER->id, backup::TARGET_NEW_COURSE);
+        
+        // iterate through our settings and make sure they are reflected in the restore plan.
+        $config_settings = array_values($this->get_settings());
+
+        foreach($config_settings as $config) {
+            if($rc->get_plan()->setting_exists($config->name)){
+                $setting = $rc->get_plan()->get_setting($config->name);
+                if ($setting->get_status() == backup_setting::NOT_LOCKED) {
+                    $setting->set_value($config->value);
+                }
+            }
+        }
+
+        // setup restore process and ensure there are no errors
+        if (!$rc->execute_precheck()) {
+            $precheckresults = $rc->get_precheck_results();
+            if (is_array($precheckresults) && !empty($precheckresults['errors'])) {
+                if (empty($CFG->keeptempdirectoriesonbackup)) {
+                    fulldelete($filepath);
+                }
+
+                $errorinfo = '';
+
+                foreach ($precheckresults['errors'] as $error) {
+                    $errorinfo .= $error;
+                }
+
+                if (array_key_exists('warnings', $precheckresults)) {
+                    foreach ($precheckresults['warnings'] as $warning) {
+                        $errorinfo .= $warning;
+                    }
+                }
+                throw new moodle_exception('backupprecheckerrors', 'webservice', '', $errorinfo);
+            }
+        }
+
+        // get the coreect course name; prevents dupe names.
+        list($this->course->fullname, $this->course->shortname) = 
+                restore_dbops::calculate_course_names(
+                        $this->course->id, 
+                        $this->course->fullname, 
+                        $this->course->shortname
+                        );
+
+        $rc->execute_plan();
+        $rc->destroy();
+
+        // Set shortname and fullname back, ensure visibility.
+        $this->course->visible = 1;
+        $DB->update_record('course', $this->course);
+
+        // clean up after ourselves.
+        if (empty($CFG->keeptempdirectoriesonbackup)) {
+            fulldelete($filepath);
+        }
+
+        return true;
+    }
+    
+    private function get_settings(){
+        global $DB;
+        $settings = $DB->get_records('config_plugins', array('plugin'=>'simple_restore'), null, 'id,name,value');
+        return $settings;
+    }
+
 }
