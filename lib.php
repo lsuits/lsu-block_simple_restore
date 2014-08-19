@@ -143,7 +143,7 @@ class simple_restore {
 
         $this->userid = $USER->id;
         $this->course = $course;
-        $this->context = get_context_instance(CONTEXT_COURSE, $course->id);
+        $this->context = context_course::instance($course->id);
         $this->filename = $filename;
         $this->restore_to = $restore_to;
     }

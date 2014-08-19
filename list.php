@@ -30,7 +30,8 @@ if($archive_mode){
     $context = context_system::instance();
     require_capability('block/simple_restore:canrestorearchive', $context);
 }else{
-    $context = get_context_instance(CONTEXT_COURSE, $courseid);
+    $context = context_course::instance($courseid);
+
     require_capability('block/simple_restore:canrestore', $context);
 }
 
@@ -55,7 +56,8 @@ if ($file and $action and $name) {
 
         // prep_restore needs a course and a context.
         $courseid = restore_dbops::create_new_course($fullname, $fullname, $category->id);
-        $context  = get_context_instance(CONTEXT_COURSE, $courseid);
+        $context = context_course::instance($courseid);
+
     }
 
     // move the backup file into place
@@ -81,7 +83,7 @@ $PAGE->set_title($blockname.': '.$heading);
 $PAGE->set_heading($blockname.': '.$heading);
 $PAGE->set_url($base_url);
 
-$system = get_context_instance(CONTEXT_SYSTEM);
+$system = context_system::instance();
 
 $is_admin = has_capability('moodle/course:create', $system);
 

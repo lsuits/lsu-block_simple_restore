@@ -38,7 +38,7 @@ class block_simple_restore extends block_list {
         if($this->archive_mode){
             $content = $this->get_site_content();
         }else{
-            $context = get_context_instance(CONTEXT_COURSE, $COURSE->id);
+            $context = context_course::instance($COURSE->id);
             if(!simple_restore_utils::permission('canrestore', $context)) {
                 return $this->content;
             }

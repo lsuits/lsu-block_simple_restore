@@ -21,8 +21,7 @@ abstract class simple_restore_event_handler {
 
         $fs = get_file_storage();
         $browser = get_file_browser();
-        $filecontext = get_context_instance_by_id($backup->contextid);
-
+        $filecontext = context::instance_by_id($backup->contextid);
         $storedfile = $fs->get_file(
             $filecontext->id,
             $backup->component,
@@ -41,7 +40,7 @@ abstract class simple_restore_event_handler {
             false,
             simple_restore_utils::permission(
                 'canrestore',
-                get_context_instance(CONTEXT_COURSE, $data->courseid)
+                context_course::instance($data->courseid)
             ),
             false,
             true
@@ -71,7 +70,7 @@ abstract class simple_restore_event_handler {
         $to_html = function($in, $course) use ($data) {
             global $DB, $OUTPUT;
 
-            $ctx = get_context_instance(CONTEXT_COURSE, $course->id);
+            $ctx = context_course::instance($course->id);
 
             $backups = $DB->get_records('files', array(
                 'component' => 'backup',
@@ -106,8 +105,8 @@ abstract class simple_restore_event_handler {
     public static function user_backups($data) {
         global $USER, $DB, $PAGE, $OUTPUT;
 
-        $user_context = get_context_instance(CONTEXT_USER, $USER->id);
-        $context = get_context_instance(CONTEXT_COURSE, $data->courseid);
+        $user_context = context_user::instance($USER->id);
+        $context = context_course::instance($data->courseid);
 
         $params = array(
             'component' => 'user',
