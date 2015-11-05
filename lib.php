@@ -346,7 +346,7 @@ class simple_restore {
         
         // .zip needs to be unzipped.
         if (!file_exists($filepath. "/moodle_backup.xml")) {
-            $fb = get_file_packer();
+            $fb = get_file_packer('application/vnd.moodle.backup');
             $fb->extract_to_pathname("$CFG->tempdir/backup/".$this->filename, $extractpath);
         }
 
