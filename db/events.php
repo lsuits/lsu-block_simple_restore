@@ -19,3 +19,9 @@ $handlers = array(
         'schedule' => 'instant'
     )
 );
+$observers = array(
+    array(
+        'eventname' => '\block_simple_restore\simple_restore_backup_list',
+        'callback'  =>
+    )
+)

@@ -126,6 +126,7 @@ if ($is_admin) {
 }
 $data->lists = array();
 
+// @todo upgrade this function
 events_trigger('simple_restore_backup_list', $data);
 
 $display_list = function($in, $list) {
