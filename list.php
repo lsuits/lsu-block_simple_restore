@@ -127,7 +127,14 @@ if ($is_admin) {
 $data->lists = array();
 
 // @todo upgrade this function
-events_trigger('simple_restore_backup_list', $data);
+//events_trigger('simple_restore_backup_list', $data);
+
+$event = \block_simple_restore\event\simple_restore_backup_list::create(array(
+    //'objectid' => $objid,
+    //'context' => context_module::instance($cmid)
+));
+$event->trigger();
+
 
 $display_list = function($in, $list) {
     echo $list->html;

@@ -22,6 +22,8 @@ $handlers = array(
 $observers = array(
     array(
         'eventname' => '\block_simple_restore\simple_restore_backup_list',
-        'callback'  =>
+        'callback'  => 'block_simple_restore_observer::simple_restore_back_list()',
+        'internal'  => true, 
+        'priority'  => 1000,
     )
-)
+);

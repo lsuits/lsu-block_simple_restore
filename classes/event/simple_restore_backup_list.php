@@ -17,7 +17,8 @@ class simple_restore_backup_list extends \core\event\base {
     protected function init() {
 
         $this->data['crud'] = 'r';
-        $this->data['contextid'] 
+        $this->context = \context_system::instance();
+        $this->data['edulevel'] = self::LEVEL_OTHER;
         
     }
 
@@ -27,7 +28,7 @@ class simple_restore_backup_list extends \core\event\base {
      * @return string
      */
     public static function get_name() {
-        return get_string('eventcommentdeleted', 'moodle');
+        return get_string('eventlist', 'simple_restore');
     }
 
     /**
@@ -39,5 +40,6 @@ class simple_restore_backup_list extends \core\event\base {
         return "The user with id '$this->userid' deleted the comment with id '$this->objectid' from the '$this->component' " .
             "with course module id '$this->contextinstanceid'.";
     }
+    
 
 }

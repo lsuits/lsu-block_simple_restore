@@ -56,3 +56,4 @@ $string['is_archive_server_desc'] = 'Archive Server Mode determines whether or n
 $string['archive_restore'] = 'Restore Archived Course';
 $string['simple_restore:myaddinstance'] = 'Add Simple restore block to My page';
 $string['simple_restore:addinstance'] = 'Add Simple restore block to Site page';
+$string['eventlist'] = 'List';
