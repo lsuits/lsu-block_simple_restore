@@ -386,7 +386,7 @@ class simple_restore {
         \block_simple_restore\event\simple_restore_complete::create(array(
             'other' => array (
                 'userid' => $this->userid,
-                'restore_to' => $restore_to
+                'restore_to' => $restore_to,
                 'courseid' => $this->course->id
             )
         ))->trigger();
