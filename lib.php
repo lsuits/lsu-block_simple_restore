@@ -65,6 +65,7 @@ abstract class simple_restore_utils {
         }
     }
 
+    // PRESUMAPLY WHERE SIMPLE_RESTORE_SELECTED_USER is called. How would I have known that? Other than reading through code? THIS IS SOME GDBS
     public static function prep_restore($fileid, $name, $courseid) {
         global $USER, $CFG;
 
@@ -84,7 +85,26 @@ abstract class simple_restore_utils {
         $data->fileid = $fileid;
         $data->to_path = $pathname;
 
-        // Handlers do the correct copying
+        // CONVERSION FROM OTHER SIMPLE_RESTORE_SELECTED_USER function from event to events 2 farther on down in this file. the - lines are events 1
+//        -        // It's important to pass the previous course's config
+// -        $course_settings = array(
+// -            'restore_to' => $this->restore_to,
+// -            'course' => $this->course
+// -        );
+// -
+// -        events_trigger('simple_restore_complete', array(
+// -            'userid' => $this->userid,
+// -            'course_settings' => $course_settings
+// -        ));
+// +        // trigger Simple Restore event
+// +        \block_simple_restore\event\simple_restore_complete::create(array(
+// +            'other' => array (
+// +                'userid' => $this->userid,
+// +                'restore_to' => $restore_to
+// +                'courseid' => $this->course->id
+// +            )
+// +        ))->trigger();
+        // trigger course, user, backadel
         events_trigger('simple_restore_selected_' . $name , $data);
 
         if (empty($data->filename)) {
