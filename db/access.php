@@ -35,4 +35,14 @@ $capabilities = array(
         ),
     'clonepermissionsfrom' => 'moodle/site:manageblocks'
     ),
+
+    'block/simple_restore:myaddinstance' => array(
+       'riskbitmask' => RISK_DATALOSS,
+       'captype' => 'write',
+       'contextlevel' => CONTEXT_SYSTEM,
+       'archetypes' => array(
+           'frontpage' => CAP_ALLOW,
+           'user'      => CAP_ALLOW,
+       )
+   ),
 );

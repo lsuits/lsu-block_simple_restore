@@ -126,7 +126,7 @@ if ($is_admin) {
 }
 $data->lists = array();
 
-events_trigger('simple_restore_backup_list', $data);
+events_trigger_legacy('simple_restore_backup_list', $data);
 
 $display_list = function($in, $list) {
     echo $list->html;
