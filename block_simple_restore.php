@@ -1,4 +1,4 @@
-3<?php
+<?php
 
 require_once $CFG->dirroot . '/blocks/simple_restore/lib.php';
 
