@@ -74,7 +74,7 @@ abstract class simple_restore_utils {
         $filename = self::simple_restore_selected($name, $fileid, $courseid, $pathname);
 
         if (empty($filename)) {
-            throw new Exception(get_string('no_file', 'block_simple_restore'););
+            throw new Exception(get_string('no_file', 'block_simple_restore'));
         }
 
         return $filename;
@@ -288,11 +288,13 @@ class simple_restore {
     var $restore_to;
 
     function __construct($course, $filename, $restore_to = 0) {
-        if(empty($course))
-            throw new Exception(get_string('no_context', 'block_simple_restore'););
+        if(empty($course)) {
+            throw new Exception(get_string('no_context', 'block_simple_restore'));
+        }
 
-        if(empty($filename))
-            throw new Exception(get_string('no_file', 'block_simple_restore'););
+        if(empty($filename)) {
+            throw new Exception(get_string('no_file', 'block_simple_restore'));
+        }
 
         global $USER;
 
