@@ -95,13 +95,13 @@ if (empty($shortname) and $is_admin) {
     if ($form->is_cancelled()) {
         redirect(new moodle_url('/course/view.php', array('id' => $courseid)));
     } else if ($data = $form->get_data()) {
-        $warn = $OUTPUT->notification(simple_restore_utils::_s('no_filter'));
+        $warn = $OUTPUT->notification(get_string('no_filter', 'block_simple_restore'));
     }
 
     $form->set_data(array('id' => $courseid, 'restore_to' =>$restore_to));
 
     echo $OUTPUT->header();
-    echo $OUTPUT->heading(simple_restore_utils::_s('adminfilter'));
+    echo $OUTPUT->heading(get_string('adminfilter', 'block_simple_restore'));
 
     if (!empty($warn)) {
         echo $warn;
@@ -117,16 +117,13 @@ if (empty($shortname) and $is_admin) {
 
 echo $OUTPUT->header();
 
-$data = new stdClass;
-$data->restore_to = $restore_to;
-$data->courseid = $courseid;
-// Admins can filter by shortname
-if ($is_admin) {
-    $data->shortname = $shortname;
+// Only admins can filter by shortname
+if ( ! $is_admin) {
+    $shortname = null;
 }
-$data->lists = array();
 
-events_trigger_legacy('simple_restore_backup_list', $data);
+// get course AND user list objects
+$list_objects = simple_restore_utils::get_backup_list_objects($courseid, $restore_to, $shortname);
 
 $display_list = function($in, $list) {
     echo $list->html;
@@ -134,15 +131,15 @@ $display_list = function($in, $list) {
 };
 
 // Obey handled order
-usort($data->lists, function($a, $b) {
+usort($list_objects, function($a, $b) {
     if ($a->order == $b->order) return 0;
     return $a->order < $b->order ? -1 : 1;
 });
 
-$successful = array_reduce($data->lists, $display_list, false);
+$successful = array_reduce($list_objects, $display_list, false);
 
 if (!$successful) {
-    echo $OUTPUT->notification(simple_restore_utils::_s('empty_backups'));
+    echo $OUTPUT->notification(get_string('empty_backups', 'block_simple_restore'));
     echo $OUTPUT->continue_button(
         new moodle_url('/course/view.php', array('id' => $courseid))
     );

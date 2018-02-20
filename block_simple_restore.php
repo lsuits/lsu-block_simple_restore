@@ -7,7 +7,7 @@ class block_simple_restore extends block_list {
     
     function init() {
         global $COURSE;
-        $this->title        = simple_restore_utils::_s('pluginname');
+        $this->title        = get_string('pluginname', 'block_simple_restore');
         $this->archive_mode = $this->get_archive_mode($COURSE->id);
     }
     
@@ -39,9 +39,11 @@ class block_simple_restore extends block_list {
             $content = $this->get_site_content();
         }else{
             $context = context_course::instance($COURSE->id);
-            if(!simple_restore_utils::permission('canrestore', $context)) {
+            
+            if (!has_capability('block/simple_restore:canrestore', $context)) {
                 return $this->content;
             }
+
             $content = $this->get_course_content();
         }
 
@@ -61,8 +63,8 @@ class block_simple_restore extends block_list {
         global $COURSE, $OUTPUT;
         $content = new stdclass;
 
-        $import_str = simple_restore_utils::_s('restore_course');
-        $delete_str = simple_restore_utils::_s('delete_restore');
+        $import_str = get_string('restore_course', 'block_simple_restore');
+        $delete_str = get_string('delete_restore', 'block_simple_restore');
 
         $content->items = array(
             $this->gen_link(1, $import_str),
@@ -90,7 +92,7 @@ class block_simple_restore extends block_list {
         global $COURSE, $OUTPUT;
         $content = new stdclass;
 
-        $archive_str = simple_restore_utils::_s('archive_restore');
+        $archive_str = get_string('archive_restore', 'block_simple_restore');
 
         $content->items = array(
             $this->gen_link(2, $archive_str),

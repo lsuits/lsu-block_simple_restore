@@ -7,14 +7,6 @@ abstract class simple_restore_utils {
         require_once $CFG->dirroot.'/backup/util/includes/restore_includes.php';
     }
 
-    public static function permission($cap, $context) {
-        return has_capability("block/simple_restore:{$cap}", $context);
-    }
-
-    public static function _s($name, $a=null) {
-        return get_string($name, 'block_simple_restore', $a);
-    }
-
     public static function build_table($backups, $name, $courseid, $restore_to) {
         $table = new html_table();
         $table->head = array(
@@ -57,11 +49,11 @@ abstract class simple_restore_utils {
     public static function heading($restore_to) {
         switch($restore_to){
             case 0:
-                return simple_restore_utils::_s('delete_restore');
+                return get_string('delete_restore', 'block_simple_restore');
             case 1:
-                return simple_restore_utils::_s('restore_course');
+                return get_string('restore_course', 'block_simple_restore');
             case 2:
-                return simple_restore_utils::_s('restore_course_archive');
+                return get_string('restore_course_archive', 'block_simple_restore');
         }
     }
 
@@ -69,29 +61,192 @@ abstract class simple_restore_utils {
         global $USER, $CFG;
 
         // Get the includes
-        simple_restore_utils::includes();
+        self::includes();
 
         if (empty($fileid) || empty($courseid)) {
-           throw new Exception(simple_restore_utils::_s('no_arguments'));
+           throw new Exception(get_string('no_arguments', 'block_simple_restore'));
         }
 
         $filename = restore_controller::get_tempdir_name($courseid, $USER->id);
         $pathname = $CFG->tempdir . '/backup/' . $filename;
 
-        $data = new stdClass;
-        $data->userid = $USER->id;
-        $data->courseid = $courseid;
-        $data->fileid = $fileid;
-        $data->to_path = $pathname;
+        // restore the file for the course to the path
+        $filename = self::simple_restore_selected($name, $fileid, $courseid, $pathname);
 
-        // Handlers do the correct copying
-        events_trigger('simple_restore_selected_' . $name , $data);
-
-        if (empty($data->filename)) {
-            throw new Exception(simple_restore_utils::_s('no_file'));
+        if (empty($filename)) {
+            throw new Exception(get_string('no_file', 'block_simple_restore'););
         }
 
         return $filename;
+    }
+
+    /**
+     * Restores the given fileid for the given courseid to the path and returns the filename
+     * 
+     * @param  string  $name       user|course
+     * @param  int     $fileid
+     * @param  int     $course_id
+     * @param  string  $to_path
+     * @return string
+     */
+    public static function simple_restore_selected($name, $fileid, $courseid, $to_path) {
+        global $DB, $CFG;
+
+        $backup = $DB->get_record('files', array('id' => $fileid));
+
+        if (empty($backup)) {
+            return true;
+        }
+
+        $fs = get_file_storage();
+        $browser = get_file_browser();
+        $filecontext = context::instance_by_id($backup->contextid);
+        $storedfile = $fs->get_file(
+            $filecontext->id,
+            $backup->component,
+            $backup->filearea,
+            $backup->itemid,
+            $backup->filepath,
+            $backup->filename
+        );
+
+        $fileinfo = new file_info_stored(
+            $browser,
+            $filecontext,
+            $storedfile,
+            $CFG->wwwroot.'/pluginfile.php',
+            '',
+            false,
+            has_capability('block/simple_restore:canrestore', context_course::instance($courseid)),
+            false,
+            true
+        );
+
+        $fileinfo->copy_to_pathname($to_path);
+
+        return $backup->filename;
+    }
+
+    /**
+     * Returns an array of course and user backup list objects which contain: html, success boolean, display order
+     * 
+     * @param  int     $courseid
+     * @param  string  $restore_to
+     * @param  string  $shortname
+     * @return array
+     */
+    public static function get_backup_list_objects($courseid, $restore_to, $shortname = null) {
+        $list_objects = array();
+        $list_objects[] = self::get_course_backup_list_object($courseid, $restore_to, $shortname);
+        $list_objects[] = self::get_user_course_backup_list_object($courseid, $restore_to);
+
+        return $list_objects;
+    }
+
+    /**
+     * Returns a "list object" containing course backup list data for the given courseid
+     *
+     * The list object contains: an html string, a success boolean, and a display order
+     * 
+     * @param  int     $courseid
+     * @param  string  $restore_to
+     * @param  string  $shortname
+     * @return object
+     */
+    public static function get_course_backup_list_object($courseid, $restore_to, $shortname = null) {
+        if (isset($shortname)) {
+            $courses = self::filter_courses($shortname);
+        } else {
+            $courses = enrol_get_my_courses();
+        }
+
+        $to_html = function($in, $course) use ($restore_to, $courseid) {
+            global $DB, $OUTPUT;
+
+            $ctx = context_course::instance($course->id);
+
+            $backups = $DB->get_records('files', array(
+                'component' => 'backup',
+                'contextid' => $ctx->id,
+                'filearea' => 'course',
+                'mimetype' => 'application/vnd.moodle.backup'
+            ), 'timemodified DESC');
+
+            if (empty($backups)) return $in;
+
+            return $in . (
+                $OUTPUT->heading($course->shortname) .
+                self::build_table(
+                    $backups,
+                    'course',
+                    $courseid,
+                    $restore_to
+                )
+            );
+        };
+
+        $list = new stdClass;
+        $list->html = array_reduce($courses, $to_html, '');
+        $list->backups = !empty($list->html);
+        $list->order = 100;
+
+        return $list;
+    }
+
+    /**
+     * Returns a "list object" containing user course backup list data for the given courseid
+     *
+     * The list object contains: an html string, a success boolean, and a display order
+     * 
+     * @param  int     $courseid
+     * @param  string  $restore_to
+     * @return object
+     */
+    public static function get_user_course_backup_list_object($courseid, $restore_to) {
+        global $USER, $DB, $PAGE, $OUTPUT;
+
+        $user_context = context_user::instance($USER->id);
+        $context = context_course::instance($courseid);
+
+        $params = array(
+            'component' => 'user',
+            'filearea' => 'backup',
+            'contextid' => $user_context->id,
+        );
+        $correct_files = function($file) { return $file->filename != '.'; };
+        $backup_files = $DB->get_records('files', $params);
+
+        $params = array(
+            'contextid' => $user_context->id,
+            'currentcontext' => $context->id,
+            'filearea' => 'backup',
+            'component' => 'user',
+            'returnurl' => $PAGE->url->out(false)
+        );
+
+        $str = get_string('managefiles', 'backup');
+        $url = new moodle_url('/backup/backupfilesedit.php', $params);
+
+        $list = new stdClass;
+        $list->header = get_string('choosefilefromuserbackup', 'backup');
+        $list->backups = array_filter($backup_files, $correct_files);
+        $list->order = 200;
+
+        $list->html = (
+            $OUTPUT->heading($list->header) .
+            $OUTPUT->single_button($url, $str, 'post', array('class' => 'center padded'))
+        );
+
+        if ($list->backups) {
+            $list->html .= self::build_table(
+                $list->backups,
+                'user',
+                $courseid,
+                $restore_to
+            );
+        }
+
+        return $list;
     }
 }
 
@@ -134,10 +289,10 @@ class simple_restore {
 
     function __construct($course, $filename, $restore_to = 0) {
         if(empty($course))
-            throw new Exception(simple_restore_utils::_s('no_context'));
+            throw new Exception(get_string('no_context', 'block_simple_restore'););
 
         if(empty($filename))
-            throw new Exception(simple_restore_utils::_s('no_file'));
+            throw new Exception(get_string('no_file', 'block_simple_restore'););
 
         global $USER;
 

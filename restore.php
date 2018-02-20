@@ -55,7 +55,7 @@ if($confirm and data_submitted()) {
         );
     } catch (Exception $e) {
         $a = $e->getMessage();
-        echo $OUTPUT->notification(simple_restore_utils::_s('no_restore', $a));
+        echo $OUTPUT->notification(get_string('no_restore', 'block_simple_restore', $a));
         
         // in case of an aborted archive restore, the 'new' course will have been deleted.
         $course->id = $archive_mode == 1 ? 1 : $course->id;
@@ -74,9 +74,7 @@ echo '<div id="restore_loading" style="display: none">'.
     $OUTPUT->pix_icon('i/loading', 'Loading').
      '</div>';
 
-$confirm_str = simple_restore_utils::_s('confirm_message',
-    '<strong>'.$restore_heading.'</strong>'
-);
+$confirm_str = get_string('confirm_message', 'block_simple_restore', '<strong>'.$restore_heading.'</strong>');
 
 $confirm_url = new moodle_url('restore.php', array(
     'contextid' => $contextid,
