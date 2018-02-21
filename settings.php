@@ -5,6 +5,8 @@ defined('MOODLE_INTERNAL') || die;
 
 if ($ADMIN->fulltree) {
 
+    require_once($CFG->dirroot. '/blocks/simple_restore/settingslib.php');
+
     // Course Settings for restore
     $general_settings = array(
         'enrol_migratetomanual' => 0,
@@ -109,4 +111,14 @@ if ($ADMIN->fulltree) {
             new admin_setting_configcheckbox($_k($name), $str, $str, $default)
         );
     }
+
+    $settings->add(new semester_backup_path_setting($_k('path'), $_s('config_path'), $_s('config_path_desc', $CFG->dataroot), ''));
+    
+    $suffix_choices = array(
+        'username' => 'username',
+        'idnumber' => 'idnumber',
+        'fullname' => 'fullname'
+    );
+
+    $settings->add(new admin_setting_configselect($_k('suffix'), $_s('config_pattern'), $_s('config_pattern_desc'), 0, $suffix_choices));
 }

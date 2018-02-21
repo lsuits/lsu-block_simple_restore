@@ -137,10 +137,51 @@ abstract class simple_restore_utils {
      */
     public static function get_backup_list_objects($courseid, $restore_to, $shortname = null) {
         $list_objects = array();
+        $list_objects[] = self::get_semester_backup_list_object($courseid, $restore_to, $shortname);
         $list_objects[] = self::get_course_backup_list_object($courseid, $restore_to, $shortname);
         $list_objects[] = self::get_user_course_backup_list_object($courseid, $restore_to);
 
         return $list_objects;
+    }
+
+    /**
+     * Returns a "list object" containing semester course backup list data for the given courseid
+     *
+     * The list object contains: an html string, a success boolean, and a display order
+     * 
+     * @param  int     $courseid
+     * @param  string  $restore_to
+     * @param  string  $shortname
+     * @return object
+     */
+    
+    public static function get_semester_backup_list_object($courseid, $restore_to, $shortname = null) {
+        global $DB, $OUTPUT;
+
+        if (isset($shortname)) {
+            $search = self::search_shortname($shortname);
+        } else {
+            $course = $DB->get_record('course', array('id' => $courseid));
+            $search = self::get_search_criterion($course);
+        }
+
+        $list = new stdClass;
+        $list->header = get_string('semester_backups', 'block_simple_restore');
+        $list->backups = self::get_semester_backups($search);
+        $list->order = 10;
+        $list->html = '';
+
+        if (!empty($list->backups)) {
+            $list->html = $OUTPUT->heading($list->header);
+            $list->html .= simple_restore_utils::build_table(
+                $list->backups,
+                'backadel',
+                $courseid,
+                $restore_to
+            );
+        }
+
+        return $list;
     }
 
     /**
@@ -248,6 +289,78 @@ abstract class simple_restore_utils {
 
         return $list;
     }
+
+    /**
+     * Search for matching shortname
+     * 
+     * @param  string  $shortname
+     * @return string
+     */
+    public static function search_shortname($shortname) {
+        if (preg_match('/\s/', $shortname)) {
+            $matchers = array('/\s/', '/\//');
+
+            return preg_replace($matchers, '-', $shortname);
+        }
+
+        return $shortname;
+    }
+
+    /**
+     * Get search criterion
+     * 
+     * @param  object  $course
+     * @return string
+     */
+    public static function get_search_criterion($course) {
+        global $USER;
+
+        $crit = get_config('block_simple_restore', 'suffix');
+
+        if (empty($crit)) {
+            return "";
+        }
+
+        $search = $crit == 'username' ? '_' . $USER->username : $course->{$crit};
+        return "{$search}[_\.]";
+    }
+
+    /**
+     * Gets semester backups
+     * 
+     * @param  string  $search
+     * @return array
+     */
+    public static function get_semester_backups($search) {
+        global $CFG;
+
+        $backadel_path = get_config('block_simple_restore', 'path');
+
+        if (empty($backadel_path)) {
+            return array();
+        }
+
+        $backadel_path = "$CFG->dataroot$backadel_path";
+
+        $by_search = function ($file) use ($search) {
+            return preg_match("/{$search}/i", $file);
+        };
+
+        $to_backup = function ($file) use ($backadel_path) {
+            $backadel = new stdClass;
+            $backadel->id = $file;
+            $backadel->filename = $file;
+            $backadel->filesize = filesize($backadel_path . $file);
+            $backadel->timemodified = filemtime($backadel_path . $file);
+
+            return $backadel;
+        };
+
+        $potentials = array_filter(scandir($backadel_path), $by_search);
+
+        return array_map($to_backup, $potentials);
+    }
+
 }
 
 class archive_restore_utils extends simple_restore_utils {

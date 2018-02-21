@@ -56,3 +56,14 @@ $string['is_archive_server_desc'] = 'Archive Server Mode determines whether or n
 $string['archive_restore'] = 'Restore Archived Course';
 $string['simple_restore:myaddinstance'] = 'Add Simple restore block to My page';
 $string['simple_restore:addinstance'] = 'Add Simple restore block to Site page';
+
+$string['config_path'] = 'Storage Path';
+$string['config_path_desc'] = 'Relative to {$a}, include the surrounding slashes.
+    Ensure that this directory is created and writable.';
+$string['config_pattern'] = 'Archive suffix';
+$string['config_pattern_desc'] = 'Data that will be appended onto backup names';
+$string['config_size_limit'] = 'Size limit before warning';
+$string['config_size_limit_desc'] = 'In megabytes';
+$string['config_path_not_exists'] = 'The path you have entered does not exist.';
+$string['config_path_not_writable'] = 'The path you have entered is not writable.';
+$string['config_path_surround'] = 'Surround the path with slashes.';
