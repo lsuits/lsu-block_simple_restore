@@ -15,7 +15,7 @@ $file = optional_param('fileid', null, PARAM_RAW);
 $shortname = optional_param('shortname', null, PARAM_TEXT);
 
 // determine whether archive mode.
-$archive_mode = $courseid == SITEID && get_config('simple_restore', 'is_archive_server');
+$archive_mode = $courseid == SITEID && get_config('block_simple_restore', 'is_archive_server');
 
 if(!$course = $DB->get_record('course', array('id' => $courseid))) {
     print_error('no_course', 'block_simple_restore', '', $courseid);
@@ -54,14 +54,15 @@ if ($file and $action and $name) {
             $category = $DB->get_record('course_categories', array('name'=>$category));
         }
 
-        // prep_restore needs a course and a context.
+        // prep_semester_backup_restore needs a course and a context.
         $courseid = restore_dbops::create_new_course($fullname, $fullname, $category->id);
         $context = context_course::instance($courseid);
 
     }
 
     // move the backup file into place
-    $filename = simple_restore_utils::prep_restore($file, $name, $courseid);
+    $filename = simple_restore_utils::prep_semester_backup_restore($file, $name, $courseid);
+    
     redirect(new moodle_url('/blocks/simple_restore/restore.php', array(
         'contextid' => $context->id,
         'filename' => $filename,

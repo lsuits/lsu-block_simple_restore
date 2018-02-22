@@ -48,7 +48,7 @@ if ($ADMIN->fulltree) {
 
     // Appropriate keys
     $_k = function ($key) {
-        return "simple_restore/{$key}";
+        return "block_simple_restore/{$key}";
     };
 
     $_s = function ($k, $a=null) {

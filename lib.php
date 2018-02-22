@@ -57,7 +57,7 @@ abstract class simple_restore_utils {
         }
     }
 
-    public static function prep_restore($fileid, $name, $courseid) {
+    public static function prep_semester_backup_restore($fileid, $name, $courseid) {
         global $USER, $CFG;
 
         // Get the includes
@@ -468,7 +468,7 @@ class simple_restore {
                 } else {
                     $admin_setting_key = $setting_name;
                 }
-                $admin_setting = get_config('simple_restore', $admin_setting_key);
+                $admin_setting = get_config('block_simple_restore', $admin_setting_key);
                 if (!is_numeric($admin_setting)) {
                     continue;
                 }
@@ -521,7 +521,7 @@ class simple_restore {
         simple_restore_utils::includes();
 
         //archive mode
-        if($this->restore_to == 2 && get_config('simple_restore', 'is_archive_server')){
+        if($this->restore_to == 2 && get_config('block_simple_restore', 'is_archive_server')){
             return $this->archive_mode_execute();
         }
 
@@ -683,7 +683,7 @@ class simple_restore {
     
     private function get_settings(){
         global $DB;
-        $settings = $DB->get_records('config_plugins', array('plugin'=>'simple_restore'), null, 'id,name,value');
+        $settings = $DB->get_records('config_plugins', array('plugin'=>'block_simple_restore'), null, 'id,name,value');
         return $settings;
     }
 

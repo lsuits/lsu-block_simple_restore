@@ -12,7 +12,7 @@ class block_simple_restore extends block_list {
     }
     
     public function get_archive_mode($courseid){
-        $archive      = get_config('simple_restore', 'is_archive_server');
+        $archive      = get_config('block_simple_restore', 'is_archive_server');
         $site_context = $courseid == SITEID;
         $archive_mode = null != $archive && $archive == 1 && $site_context;
         return $archive_mode;

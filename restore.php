@@ -9,7 +9,7 @@ $restore_to = optional_param('restore_to', 0, PARAM_INT);
 $confirm = optional_param('confirm', 0, PARAM_INT);
 $loading = optional_param('loading', 0, PARAM_INT);
 
-$archive_mode = get_config('simple_restore','is_archive_server') == 1 && $restore_to == 2;
+$archive_mode = get_config('block_simple_restore','is_archive_server') == 1 && $restore_to == 2;
 list($context, $course, $cm) = get_context_info_array($contextid);
 
 
