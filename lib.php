@@ -70,8 +70,7 @@ abstract class simple_restore_utils {
         $filename = restore_controller::get_tempdir_name($courseid, $USER->id);
         $pathname = $CFG->tempdir . '/backup/' . $filename;
 
-        // restore the file for the course to the path
-        $filename = self::simple_restore_selected($name, $fileid, $courseid, $pathname);
+        self::simple_restore_selected($name, $fileid, $courseid, $pathname);
 
         if (empty($filename)) {
             throw new Exception(get_string('no_file', 'block_simple_restore'));
@@ -91,6 +90,23 @@ abstract class simple_restore_utils {
      */
     public static function simple_restore_selected($name, $fileid, $courseid, $to_path) {
         global $DB, $CFG;
+
+        // if this is a backadel selection
+        if ($name == 'backadel') {
+            // copy the selected file to the correct path
+            $backadel_path = get_config('block_simple_restore', 'path');
+
+            $real_path = $CFG->dataroot . $backadel_path . $fileid;
+
+            if ( ! file_exists($real_path)) {
+                return true;
+            }
+
+            copy($real_path, $to_path);
+
+            // return the filename, unchanged
+            return $fileid;
+        }
 
         $backup = $DB->get_record('files', array('id' => $fileid));
 

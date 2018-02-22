@@ -147,3 +147,7 @@ if (!$successful) {
 }
 
 echo $OUTPUT->footer();
+
+function dd($thing) {
+    var_dump($thing);die;
+}
