@@ -96,7 +96,7 @@ abstract class simple_restore_utils {
             $search = self::backadel_criterion($course);
         }
         $list = new stdClass;
-        $list->header = get_string('semester_backups', 'block_backadel');
+        $list->header = get_string('semester_backups', 'block_simple_restore');
         $list->backups = self::backadel_backups($search);
         $list->order = 10;
         $list->html = '';
