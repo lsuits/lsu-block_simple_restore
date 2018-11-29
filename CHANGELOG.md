@@ -35,3 +35,7 @@
   - Overwrite the current course with materials from previously taught courses
   - Import old matierals into the current course from previously taught courses
   - Integrates with LSU's Baclup and Delete (backadel) for seamless end of semester backups
+
+## v1.1
+- Removed events
+- Added 3.6 compatibility

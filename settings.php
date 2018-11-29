@@ -1,14 +1,33 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-// Restore general settings
+/**
+ * @package    block_simple_restore
+ * @copyright  2008 onwards Louisiana State University
+ * @copyright  2008 onwards Chad Mazilly, Robert Russo, Jason Peak, Dave Elliott, Adam Zapletal, Philip Cali
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 defined('MOODLE_INTERNAL') || die;
 
+// Restore general settings.
 if ($ADMIN->fulltree) {
 
-    require_once($CFG->dirroot. '/blocks/simple_restore/settingslib.php');
-
-    // Course Settings for restore
-    $general_settings = array(
+    // Course Settings for restore.
+    $generalsettings = array(
         'enrol_migratetomanual' => 0,
         'users' => 0,
         'user_files' => 0,
@@ -22,7 +41,7 @@ if ($ADMIN->fulltree) {
         'grade_histories' => 0
     );
 
-    $high_level_settings = array(
+    $highlevelsettings = array(
         'keep_roles_and_enrolments' => 0,
         'keep_groups_and_groupings' => 0,
         'overwrite_conf' => 1
@@ -43,82 +62,74 @@ if ($ADMIN->fulltree) {
         return $in + $included($module) + $userinfo($module);
     };
 
-    // Flat mapped the producer defaults with original modules
-    $course_settings = array_reduce($modules, $flatmap, array());
+    // Flat mapped the producer defaults with original modules.
+    $coursesettings = array_reduce($modules, $flatmap, array());
 
-    // Appropriate keys
-    $_k = function ($key) {
-        return "block_simple_restore/{$key}";
+    // Appropriate keys.
+    $srk = function ($key) {
+        return "simple_restore/{$key}";
     };
 
-    $_s = function ($k, $a=null) {
+    $srs = function ($k, $a=null) {
         return get_string($k, 'block_simple_restore', $a);
     };
 
-    $iter_settings = function ($chosen_settings) use ($settings, $_k, $_s) {
-        foreach ($chosen_settings as $name => $default) {
-            $str = $_s($name);
+    $itersettings = function ($chosensettings) use ($settings, $srk, $srs) {
+        foreach ($chosensettings as $name => $default) {
+            $str = $srs($name);
             $settings->add(
-                new admin_setting_configcheckbox($_k($name), $str, $str, $default)
+                new admin_setting_configcheckbox($srk($name), $str, $str, $default)
             );
         }
     };
 
-    // Archive server mode toggle
+    // Archive server mode toggle.
     $settings->add(
             new admin_setting_configcheckbox(
-                    $_k('is_archive_server'), 
-                    $_s('is_archive_server'), 
-                    $_s('is_archive_server_desc'), 
-                    0,1,0)
+                    $srk('is_archive_server'),
+                    $srs('is_archive_server'),
+                    $srs('is_archive_server_desc'),
+                    0,
+                    1,
+                    0)
             );
 
     // Start building the Admin screen.
     $settings->add(
         new admin_setting_heading(
-            $_k('general'), $_s('general'), $_s('general_desc')
+            $srk('general'), $srs('general'), $srs('general_desc')
         )
     );
 
-    $iter_settings($general_settings);
+    $itersettings($generalsettings);
 
     $settings->add(
         new admin_setting_heading(
-            $_k('course'), $_s('course'), $_s('course_desc')
+            $srk('course'), $srs('course'), $srs('course_desc')
         )
     );
 
 
-    $iter_settings($high_level_settings);
+    $itersettings($highlevelsettings);
 
     $settings->add(
         new admin_setting_heading(
-            $_k('module'), $_s('module'), $_s('module_desc')
+            $srk('module'), $srs('module'), $srs('module_desc')
         )
     );
 
-    foreach ($course_settings as $name => $default) {
+    foreach ($coursesettings as $name => $default) {
         $data = explode('_', $name);
         $type = array_pop($data);
         $module = implode('_', $data);
         if ($module == 'section') {
-            $module_name = $_s('section');
+            $modulename = $srs('section');
         } else {
-            $module_name = get_string('pluginname', 'mod_'.$module);
+            $modulename = get_string('pluginname', 'mod_'.$module);
         }
-        $str = $_s('restore_'.$type, $module_name);
+        $str = $srs('restore_'.$type, $modulename);
         $settings->add(
-            new admin_setting_configcheckbox($_k($name), $str, $str, $default)
+            new admin_setting_configcheckbox($srk($name), $str, $str, $default)
         );
     }
-
-    $settings->add(new semester_backup_path_setting($_k('path'), $_s('config_path'), $_s('config_path_desc', $CFG->dataroot), ''));
-    
-    $suffix_choices = array(
-        'username' => 'username',
-        'idnumber' => 'idnumber',
-        'fullname' => 'fullname'
-    );
-
-    $settings->add(new admin_setting_configselect($_k('suffix'), $_s('config_pattern'), $_s('config_pattern_desc'), 0, $suffix_choices));
 }

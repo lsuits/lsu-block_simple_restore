@@ -1,4 +1,25 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ * @package    block_simple_restore
+ * @copyright  2008 onwards Louisiana State University
+ * @copyright  2008 onwards Chad Mazilly, Robert Russo, Jason Peak, Dave Elliott, Adam Zapletal, Philip Cali
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 $string['pluginname'] = 'Simple Restore';
 $string['simple_restore:canrestore'] = 'Users can use the Simple Restore';
@@ -56,14 +77,3 @@ $string['is_archive_server_desc'] = 'Archive Server Mode determines whether or n
 $string['archive_restore'] = 'Restore Archived Course';
 $string['simple_restore:myaddinstance'] = 'Add Simple restore block to My page';
 $string['simple_restore:addinstance'] = 'Add Simple restore block to Site page';
-
-$string['config_path'] = 'Storage Path';
-$string['config_path_desc'] = 'Relative to {$a}, include the surrounding slashes.
-    Ensure that this directory is created and writable.';
-$string['config_pattern'] = 'Archive suffix';
-$string['config_pattern_desc'] = 'Data that will be appended onto backup names';
-$string['config_size_limit'] = 'Size limit before warning';
-$string['config_size_limit_desc'] = 'In megabytes';
-$string['config_path_not_exists'] = 'The path you have entered does not exist.';
-$string['config_path_not_writable'] = 'The path you have entered is not writable.';
-$string['config_path_surround'] = 'Surround the path with slashes.';
